@@ -1,35 +1,107 @@
-# Roadmap
+# Store Discovery Roadmap
+
+GitHub Issues are the source of truth for execution. This document defines ordering and phase gates.
 
 ## Phase 0 — Foundation
-- Product SDD
-- Architecture decisions
-- DevContainer
-- OpenSpec workflow
-- GitHub issue backlog
 
-## Phase 1 — MVP vertical slice
-- Mobile shell
-- Location permission + manual area fallback
-- Discovery API
-- Provider adapter
-- Search/category UI
-- Results list
-- Store detail
-- Contract/integration tests
-- Basic observability
+### Architecture decisions — do first
+- #1 Select mobile framework for iOS and Android
+- #2 Select backend runtime and initial API architecture
+- #3 Select places/store data and map providers
 
-## Phase 2 — Personal utility
-- Favorites
-- Recent searches
-- Share/deep link
-- Better filters and ranking
-- Caching where provider terms permit
+### Product / engineering foundation
+- #9 Product taxonomy and normalized store categories
+- #10 API/domain contracts and compatibility policy
+- #11 Repository engineering standards
+- #12 CI quality gates
+- #13 Secrets and environment configuration
+- #14 Observability baseline
+- #15 Privacy, location-data and retention policy
 
-## Phase 3 — Intelligent discovery
-- Preference-aware ranking
-- Natural-language intent
-- Recommendation explanations
-- Multi-provider strategy where legally and economically appropriate
+**Gate:** implementation stack, provider constraints, contracts, privacy baseline and engineering workflow are sufficiently defined to scaffold production code.
+
+## Phase 1 — MVP
+
+### Scaffolding and core vertical slice
+- #16 Scaffold selected mobile application
+- #17 Scaffold backend service and health endpoints
+- #18 Implement first real places provider adapter
+- #4 Location input and permission fallback
+- #5 Store discovery API with provider abstraction
+- #19 Normalized filters and discovery ranking
+- #6 Discovery search and results screen
+- #7 Store detail API and mobile screen
+- #20 Map presentation and navigation hand-off
+
+### Reliability and release engineering
+- #21 Mobile API error/loading/offline resilience
+- #22 Accessibility and localization baseline
+- #23 Security review and API abuse controls
+- #24 Deployment environments and backend delivery
+- #25 Internal mobile distribution
+- #8 Core discovery E2E smoke test
+- #26 MVP release readiness and acceptance
+
+**MVP outcome:** location/area → discovery intent → ranked store results → store detail → navigation, with deterministic tests and a real provider integration.
+
+## Phase 2 — Personal Utility
+
+- #27 Favorites
+- #28 Recent searches
+- #41 Share links and deep links
+- #42 Advanced discovery filters
+- #43 Provider-compliant caching
+- #44 Decide account/authentication model
+- #45 Sync user-owned data across devices (only if accounts are accepted)
+
+**Gate:** only add accounts when cross-device/user-owned data provides enough value to justify identity lifecycle and privacy complexity.
+
+## Phase 3 — Intelligent Discovery
+
+- #46 Preference model
+- #47 Preference-aware ranking
+- #48 Natural-language discovery intent
+- #49 Recommendation explanations
+- #50 Multi-provider strategy evaluation
+
+AI features must consume normalized factual store data. They must not invent store attributes or hide uncertainty.
+
+## Cross-cutting quality
+
+- #51 Product analytics and MVP success metrics
+- #52 Performance budgets and load-test baseline
+- #53 Dependency, license and supply-chain checks
+
+These can begin during Phase 0/1 and become release gates as appropriate.
+
+## Release
+
+- #54 Public beta readiness
 
 ## Explicitly deferred
-Hermes → MacBook → Codex automatic dispatch pipeline is not a prerequisite for App feature development.
+
+Hermes → Tailscale/SSH → MacBook → DevContainer → Codex automatic issue dispatch is intentionally not a prerequisite for App development.
+
+## Recommended execution order
+
+```text
+#1 + #2 + #3
+      ↓
+#9–#15
+      ↓
+#16 + #17
+      ↓
+#4 + #5 + #18 + #19
+      ↓
+#6 + #7 + #20
+      ↓
+#8 + #21–#26
+      ↓
+MVP accepted
+      ↓
+#27–#45
+      ↓
+#46–#50
+      ↓
+#54 Public Beta
+```
