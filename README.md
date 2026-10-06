@@ -48,6 +48,14 @@ store-discovery/
 
 Hermes runs on the NAS and dispatches GitHub Issues over Tailscale SSH to the MacBook Worker. The worker uses the repository DevContainer for SDKs and dependencies, invokes Codex, runs checks, pushes a feature branch, and opens a PR. See [docs/agent-workflow.md](docs/agent-workflow.md).
 
+## Foundation check
+
+Run the deterministic foundation gate inside the DevContainer:
+
+```bash
+./scripts/repository-check.sh
+```
+
 ## Initial MVP
 
 The first vertical slice is:

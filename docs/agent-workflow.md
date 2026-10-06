@@ -44,6 +44,7 @@ Hermes sends a payload equivalent to:
 
 ```json
 {
+  "job_id": "hermes-2026-10-06-0001",
   "repository": "KonohaDerek/store-discovery",
   "issue_number": 55,
   "branch": "feat/55-agent-poc",
@@ -51,7 +52,7 @@ Hermes sends a payload equivalent to:
 }
 ```
 
-The worker rejects a job if `repository`, `issue_number`, `branch`, or `prompt` is missing. Credentials are supplied by the worker environment; they are never placed in the payload, repository, Issue, commit, or PR body.
+The worker rejects a job if `job_id`, `repository`, `issue_number`, `branch`, or `prompt` is missing. Credentials are supplied by the worker environment; they are never placed in the payload, repository, Issue, commit, or PR body.
 
 ## Worker contract
 
@@ -59,7 +60,7 @@ The worker rejects a job if `repository`, `issue_number`, `branch`, or `prompt` 
 2. Create an isolated checkout for the requested branch. Never reuse a dirty workspace.
 3. Start the repository DevContainer with `devcontainer up --workspace-folder <repo>`.
 4. Run Codex against the checked-out repository with the Issue and this document as context.
-5. Run the repository check inside the DevContainer.
+5. Run `./scripts/repository-check.sh` inside the DevContainer. This is the single foundation check for the POC; later milestones may extend it with SDK-specific checks.
 6. Commit using Conventional Commit style and include `Refs #<issue>`.
 7. Push the feature branch and open a PR that links the Issue.
 8. Return `job_id`, branch, PR URL, test status, and a short failure reason when applicable.
@@ -98,4 +99,3 @@ Use these repository objects for the POC:
 - Issue: `[MVP-00] Run GitHub → Hermes → MacBook → DevContainer → Codex → PR POC`
 
 After the first run is stable, the worker can be generalized for app implementation Issues. Product milestones remain governed by [roadmap.md](roadmap.md).
-
