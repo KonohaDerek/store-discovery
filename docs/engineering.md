@@ -3,7 +3,7 @@
 ## Workflow
 SDD/OpenSpec → Issue → branch → implementation → tests → review → PR.
 
-Hermes automatic dispatch is deferred and is not part of the Definition of Done.
+Hermes → Tailscale/SSH → MacBook Worker → DevContainer → Codex is the `MVP-00 Foundation` execution POC. It is not required for every product change until the POC acceptance criteria in [agent-workflow.md](agent-workflow.md) pass.
 
 ## Branches
 - `feat/<issue>-<slug>`
@@ -34,3 +34,7 @@ A PR must:
 
 ## Toolchains
 Project SDKs are pinned in DevContainer. macOS/Xcode is the explicit exception required for iOS simulator/build/signing/distribution.
+
+## Agent execution
+
+The worker must use an isolated checkout, must not force-push or merge `main`, and must report failures without blind retries. See [agent-workflow.md](agent-workflow.md) for the job contract and safety boundaries.

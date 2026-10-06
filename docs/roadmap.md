@@ -80,7 +80,7 @@ These can begin during Phase 0/1 and become release gates as appropriate.
 
 ## Explicitly deferred
 
-Hermes → Tailscale/SSH → MacBook → DevContainer → Codex automatic issue dispatch is intentionally not a prerequisite for App development.
+Advanced Hermes orchestration, parallel workers, automatic retries, and OpenAB are deferred until the single-worker POC is stable. The first GitHub → Hermes → MacBook → DevContainer → Codex → PR path is tracked as `MVP-00 Foundation` in [agent-workflow.md](agent-workflow.md).
 
 ## Recommended execution order
 
