@@ -44,6 +44,10 @@ store-discovery/
 5. Work is tracked with GitHub Issues and delivered through branches and PRs.
 6. Secrets and provider credentials must never be committed.
 
+## Agent development flow
+
+Hermes runs on the NAS and dispatches GitHub Issues over Tailscale SSH to the MacBook Worker. The worker uses the repository DevContainer for SDKs and dependencies, invokes Codex, runs checks, pushes a feature branch, and opens a PR. See [docs/agent-workflow.md](docs/agent-workflow.md).
+
 ## Initial MVP
 
 The first vertical slice is:
