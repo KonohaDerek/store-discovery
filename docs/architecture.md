@@ -1,5 +1,21 @@
 # Architecture
 
+## Accepted technology decisions
+
+| Area | Decision |
+|---|---|
+| Mobile | Flutter 3.47.x / Dart |
+| Backend | .NET 10 LTS / ASP.NET Core |
+| Places | Google Places API (New), backend-mediated |
+| Maps | Google Maps SDK for iOS and Android |
+| API | REST, versioned under `/api/v1` |
+| Architecture | Modular monolith + provider adapters |
+| Database | Deferred until a persistence use case exists |
+| Observability | OpenTelemetry baseline |
+| Authentication | Deferred pending Phase 2 account decision |
+
+See GitHub Issues #1, #2 and #3 for decision rationale and alternatives.
+
 ## Principles
 
 - Mobile-first, backend-mediated provider access.
@@ -8,53 +24,74 @@
 - Specification before implementation.
 - Start as a modular monolith; split services only when operational evidence requires it.
 - No unnecessary database dependency in the read-only discovery vertical slice.
+- Never mirror an external place provider's dataset unless its license explicitly permits it.
 
 ## Logical architecture
 
 ```text
-iOS / Android
-     |
-     v
-Store Discovery API
-     |
-     +--> Discovery Application Layer
-     |       |
-     |       +--> Ranking / normalization
-     |
-     +--> Place Provider Interface
-              |
-              +--> Provider Adapter A
-              +--> Future Provider Adapter B
+Flutter iOS / Android
+        |
+        | REST /api/v1
+        v
+ASP.NET Core Store Discovery API
+        |
+        +--> Application / Discovery
+        |       |
+        |       +--> Ranking / normalization
+        |
+        +--> IPlaceProvider
+                |
+                +--> GooglePlacesProvider (MVP)
+                +--> Future provider adapter
 ```
 
-Optional persistence/caching sits behind interfaces and must not leak provider-specific schemas into mobile contracts.
+## Mobile
 
-## Initial modules
+Flutter owns:
+- discovery/search UI
+- device location permission
+- manual-area fallback
+- result/detail presentation
+- Google Maps presentation
+- navigation hand-off
+- local ephemeral state
 
-### mobile
-Search/discovery UI, permission handling, result list, store detail, navigation hand-off.
+Platform-specific integrations should use maintained Flutter plugins first, then platform channels/native code when justified.
 
-### backend
-HTTP API, validation, discovery use cases, provider adapters, normalization, observability.
+### DevContainer exception for iOS
 
-### tests
-Contract, integration and end-to-end tests that span modules.
+Flutter/Dart and Android project toolchains should be pinned in the DevContainer. Apple requires Xcode/macOS for iOS build, simulator, codesigning and distribution; Xcode is therefore treated as required host platform tooling rather than a project SDK.
 
-## Architecture decisions pending
+## Backend modules
 
-| Decision | Status |
-|---|---|
-| Mobile framework | Pending |
-| Backend runtime | Pending |
-| External places provider | Pending |
-| Map provider | Pending |
-| Database | Deferred until persistence use case |
-| Authentication | Deferred pending MVP account requirement |
+### API
+HTTP endpoints, transport contracts, validation, error mapping.
+
+### Application
+Discovery/detail use cases and orchestration.
+
+### Domain
+Provider-neutral StoreSummary, StoreDetail, discovery/filter concepts.
+
+### Infrastructure
+Google Places adapter, configuration, resilience policies and future persistence/cache implementations.
+
+### Observability
+OpenTelemetry logs/metrics/traces, correlation IDs and provider latency/error metrics.
+
+## Provider policy
+
+Google Places API (New) is the MVP source. Mobile does not receive privileged provider credentials.
+
+Only request fields needed for the current use case. Do not persist arbitrary Places content. Provider identifiers may be retained where terms permit; Google Place IDs are specifically exempt from caching restrictions.
+
+The application contract must not expose Google-specific schemas as its domain model.
 
 ## Security baseline
 
-- Provider keys are server-side only where licensing permits.
+- Provider keys are server-side where applicable.
 - Secrets use environment/secret injection.
 - Validate all external input.
-- Apply request timeout/retry policies at provider boundary.
-- Avoid storing precise location unless a feature explicitly requires it.
+- Apply timeout/retry/circuit behavior at provider boundaries.
+- Avoid storing precise user location by default.
+- Redact location/secrets from logs where not operationally required.
