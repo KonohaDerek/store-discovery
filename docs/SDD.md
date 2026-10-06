@@ -1,7 +1,7 @@
 # Store Discovery — Software Design Document
 
-Status: Draft  
-Phase: MVP definition
+Status: Accepted for scaffold; MVP product behavior remains in implementation
+Phase: MVP
 
 ## 1. Problem
 
@@ -103,14 +103,13 @@ Acceptance criteria:
 - Background location tracking
 - Hermes/Codex automatic issue dispatch pipeline
 
-## 8. Decisions still required
+## 8. Accepted implementation decisions
 
-Before implementation of the first production vertical slice:
-- Mobile framework: Flutter vs React Native.
-- Backend runtime: .NET vs Go.
-- First place-data provider and its license/cost constraints.
-- Map/rendering provider.
-- Authentication requirement for MVP.
-- Persistence choice after confirming whether MVP needs accounts/favorites.
+The scaffold uses the accepted decisions in [architecture.md](architecture.md):
 
-These decisions should be recorded in `docs/architecture.md` or ADRs before the affected implementation.
+- Flutter 3.47.x / Dart for iOS and Android.
+- .NET 10 LTS / ASP.NET Core for the backend.
+- Google Places API (New) behind a backend provider adapter.
+- Google Maps SDK for iOS and Android.
+- REST contracts versioned under `/api/v1`.
+- No database in the read-only MVP discovery slice.

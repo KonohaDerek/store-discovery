@@ -4,9 +4,9 @@ Store Discovery is a mobile-first application for discovering nearby stores and 
 
 ## Current phase
 
-**Phase 0 — Product foundation / MVP definition**
+**Phase 1 — MVP scaffold**
 
-The repository is intentionally starting specification-first. App functionality should be implemented from an accepted SDD/OpenSpec change and tracked through GitHub Issues.
+The foundation decisions are accepted. The repository now contains the first buildable Flutter application and ASP.NET Core API host; product functionality still follows an accepted SDD/OpenSpec change and GitHub Issue.
 
 ## Product goals
 
@@ -43,6 +43,22 @@ store-discovery/
 4. Implementation must have tests appropriate to the change.
 5. Work is tracked with GitHub Issues and delivered through branches and PRs.
 6. Secrets and provider credentials must never be committed.
+
+## Local checks
+
+Run these commands from the DevContainer:
+
+```bash
+cd mobile
+flutter analyze
+flutter test
+flutter build apk --debug
+cd ..
+dotnet build backend/StoreDiscovery.sln --configuration Release
+dotnet test backend/StoreDiscovery.sln --configuration Release
+```
+
+The iOS simulator, Xcode build, signing, and distribution remain macOS host responsibilities.
 
 ## Agent development flow
 
