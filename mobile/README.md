@@ -14,6 +14,9 @@ If permission or location services are unavailable, the manual area field
 remains available. Platform permission declarations belong to the separate
 mobile runner setup.
 
+The core flow supports Traditional Chinese (`zh_TW`) with English as the
+fallback locale. Search results and error states include screen-reader labels.
+
 ## Checks
 
 ```bash
