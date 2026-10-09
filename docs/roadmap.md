@@ -17,6 +17,8 @@ GitHub Issues are the source of truth for execution. This document defines order
   distance/radius behavior, and deterministic open-state ranking implemented.
 - #21 Mobile API resilience: timeout/network/unavailable response mapping and
   retry actions implemented for discovery and store detail.
+- #8 Core discovery smoke test: deterministic mobile success and provider-failure
+  flows cover manual-area search, results, and store detail.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;
   required-check enforcement still belongs to GitHub branch protection settings.
 
