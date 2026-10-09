@@ -10,6 +10,9 @@ GitHub Issues are the source of truth for execution. This document defines order
   configuration validation, correlation logging, and integration tests implemented.
 - Discovery vertical slice: versioned discovery endpoint, deterministic sample
   provider, and Flutter search/results shell implemented; real provider adapter remains.
+- #4 Location input: explicit device-location action with permission/denied
+  fallback to manual area; platform permission declarations remain in mobile
+  runner setup.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;
   required-check enforcement still belongs to GitHub branch protection settings.
 

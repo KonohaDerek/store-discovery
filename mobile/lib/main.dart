@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'api/discovery_api_client.dart';
 import 'config/app_config.dart';
+import 'location/location_service.dart';
 
 void main() {
   final config = AppConfig.fromEnvironment();
@@ -9,13 +10,19 @@ void main() {
     apiClient: config.isConfigured
         ? DiscoveryApiClient(baseUri: config.apiUri)
         : null,
+    locationService: const DeviceLocationService(),
   ));
 }
 
 class StoreDiscoveryApp extends StatelessWidget {
-  const StoreDiscoveryApp({super.key, this.apiClient});
+  const StoreDiscoveryApp({
+    super.key,
+    this.apiClient,
+    this.locationService,
+  });
 
   final DiscoveryApiClient? apiClient;
+  final LocationService? locationService;
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +32,23 @@ class StoreDiscoveryApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
       ),
-      home: DiscoveryHomePage(apiClient: apiClient),
+      home: DiscoveryHomePage(
+        apiClient: apiClient,
+        locationService: locationService,
+      ),
     );
   }
 }
 
 class DiscoveryHomePage extends StatefulWidget {
-  const DiscoveryHomePage({super.key, this.apiClient});
+  const DiscoveryHomePage({
+    super.key,
+    this.apiClient,
+    this.locationService,
+  });
 
   final DiscoveryApiClient? apiClient;
+  final LocationService? locationService;
 
   @override
   State<DiscoveryHomePage> createState() => _DiscoveryHomePageState();
@@ -44,7 +59,10 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   final areaController = TextEditingController();
   List<StoreSummary> results = const [];
   String? errorMessage;
+  String? locationMessage;
+  LocationPoint? location;
   bool isLoading = false;
+  bool isLocating = false;
   bool hasSearched = false;
 
   @override
@@ -61,9 +79,10 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       setState(() => errorMessage = 'Search is not configured.');
       return;
     }
-    if (query.isEmpty || area.isEmpty) {
+    if (query.isEmpty || (area.isEmpty && location == null)) {
       setState(
-        () => errorMessage = 'Enter what you need and an area to search.',
+        () => errorMessage =
+            'Enter what you need and an area, or use your location.',
       );
       return;
     }
@@ -77,7 +96,9 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
     try {
       final response = await widget.apiClient!.discover(
         query: query,
-        area: area,
+        area: area.isEmpty ? null : area,
+        latitude: location?.latitude,
+        longitude: location?.longitude,
       );
       if (!mounted) return;
       setState(() {
@@ -92,6 +113,48 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       setState(() => errorMessage = 'Unable to reach discovery service.');
     } finally {
       if (mounted) setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> useCurrentLocation() async {
+    final service = widget.locationService;
+    if (service == null) {
+      setState(
+        () => locationMessage =
+            'Location is not configured. Enter an area instead.',
+      );
+      return;
+    }
+
+    setState(() {
+      isLocating = true;
+      locationMessage = null;
+      errorMessage = null;
+    });
+
+    try {
+      final current = await service.currentLocation();
+      if (!mounted) return;
+      setState(() {
+        location = current;
+        areaController.clear();
+        locationMessage = 'Using device location for search.';
+      });
+    } on LocationException catch (error) {
+      if (!mounted) return;
+      setState(() {
+        location = null;
+        locationMessage = error.message;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        location = null;
+        locationMessage =
+            'Unable to read device location. Enter an area instead.';
+      });
+    } finally {
+      if (mounted) setState(() => isLocating = false);
     }
   }
 
@@ -120,8 +183,18 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
             ),
           ),
           const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: isLocating ? null : useCurrentLocation,
+            icon: const Icon(Icons.my_location),
+            label: Text(isLocating ? 'Locating…' : 'Use my location'),
+          ),
+          if (locationMessage != null) ...[
+            const SizedBox(height: 8),
+            Text(locationMessage!),
+          ],
+          const SizedBox(height: 12),
           FilledButton(
-            onPressed: isLoading ? null : search,
+            onPressed: isLoading || isLocating ? null : search,
             child: Text(isLoading ? 'Searching…' : 'Search'),
           ),
           if (errorMessage != null) ...[
