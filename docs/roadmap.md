@@ -19,6 +19,8 @@ GitHub Issues are the source of truth for execution. This document defines order
   retry actions implemented for discovery and store detail.
 - #8 Core discovery smoke test: deterministic mobile success and provider-failure
   flows cover manual-area search, results, and store detail.
+- #22 Accessibility and localization: core strings use a Traditional Chinese
+  baseline with English fallback, and search/detail states expose semantics.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;
   required-check enforcement still belongs to GitHub branch protection settings.
 

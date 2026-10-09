@@ -15,10 +15,10 @@ enum LocationFailure {
 }
 
 class LocationException implements Exception {
-  const LocationException(this.failure, this.message);
+  const LocationException(this.failure, [this.message]);
 
   final LocationFailure failure;
-  final String message;
+  final String? message;
 }
 
 abstract interface class LocationService {
@@ -32,10 +32,7 @@ class DeviceLocationService implements LocationService {
   Future<LocationPoint> currentLocation() async {
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
-        throw const LocationException(
-          LocationFailure.servicesDisabled,
-          'Location services are disabled. Enter an area instead.',
-        );
+        throw const LocationException(LocationFailure.servicesDisabled);
       }
 
       var permission = await Geolocator.checkPermission();
@@ -44,17 +41,11 @@ class DeviceLocationService implements LocationService {
       }
 
       if (permission == LocationPermission.denied) {
-        throw const LocationException(
-          LocationFailure.permissionDenied,
-          'Location permission denied. Enter an area instead.',
-        );
+        throw const LocationException(LocationFailure.permissionDenied);
       }
 
       if (permission == LocationPermission.deniedForever) {
-        throw const LocationException(
-          LocationFailure.permissionDeniedForever,
-          'Location permission is disabled. Enter an area instead.',
-        );
+        throw const LocationException(LocationFailure.permissionDeniedForever);
       }
 
       final position = await Geolocator.getCurrentPosition();
@@ -65,10 +56,7 @@ class DeviceLocationService implements LocationService {
     } on LocationException {
       rethrow;
     } catch (_) {
-      throw const LocationException(
-        LocationFailure.unknown,
-        'Unable to read device location. Enter an area instead.',
-      );
+      throw const LocationException(LocationFailure.unknown);
     }
   }
 }

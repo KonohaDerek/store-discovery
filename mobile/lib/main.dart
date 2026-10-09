@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'api/discovery_api_client.dart';
 import 'config/app_config.dart';
+import 'l10n/app_localizations.dart';
 import 'location/location_service.dart';
 
 void main() {
@@ -19,15 +20,24 @@ class StoreDiscoveryApp extends StatelessWidget {
     super.key,
     this.apiClient,
     this.locationService,
+    this.locale,
   });
 
   final DiscoveryApiClient? apiClient;
   final LocationService? locationService;
+  final Locale? locale;
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Store Discovery',
+      onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
+      locale: locale,
+      localizationsDelegates: const [AppLocalizations.delegate],
+      supportedLocales: AppLocalizations.supportedLocales,
+      localeResolutionCallback: (locale, _) =>
+          locale?.languageCode == 'zh'
+              ? const Locale('zh', 'TW')
+              : const Locale('en'),
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
         useMaterial3: true,
@@ -73,17 +83,15 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   }
 
   Future<void> search() async {
+    final l10n = AppLocalizations.of(context);
     final query = queryController.text.trim();
     final area = areaController.text.trim();
     if (widget.apiClient == null) {
-      setState(() => errorMessage = 'Search is not configured.');
+      setState(() => errorMessage = l10n.searchNotConfigured);
       return;
     }
     if (query.isEmpty || (area.isEmpty && location == null)) {
-      setState(
-        () => errorMessage =
-            'Enter what you need and an area, or use your location.',
-      );
+      setState(() => errorMessage = l10n.enterQueryAndArea);
       return;
     }
 
@@ -107,22 +115,20 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       });
     } on DiscoveryApiException catch (error) {
       if (!mounted) return;
-      setState(() => errorMessage = error.message);
+      setState(() => errorMessage = discoveryErrorMessage(error, l10n));
     } catch (_) {
       if (!mounted) return;
-      setState(() => errorMessage = 'Unable to reach discovery service.');
+      setState(() => errorMessage = l10n.unableReachDiscovery);
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
   }
 
   Future<void> useCurrentLocation() async {
+    final l10n = AppLocalizations.of(context);
     final service = widget.locationService;
     if (service == null) {
-      setState(
-        () => locationMessage =
-            'Location is not configured. Enter an area instead.',
-      );
+      setState(() => locationMessage = l10n.locationNotConfigured);
       return;
     }
 
@@ -138,20 +144,19 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       setState(() {
         location = current;
         areaController.clear();
-        locationMessage = 'Using device location for search.';
+        locationMessage = l10n.usingDeviceLocation;
       });
     } on LocationException catch (error) {
       if (!mounted) return;
       setState(() {
         location = null;
-        locationMessage = error.message;
+        locationMessage = locationErrorMessage(error, l10n);
       });
     } catch (_) {
       if (!mounted) return;
       setState(() {
         location = null;
-        locationMessage =
-            'Unable to read device location. Enter an area instead.';
+        locationMessage = l10n.unableReadLocation;
       });
     } finally {
       if (mounted) setState(() => isLocating = false);
@@ -160,81 +165,99 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Store Discovery')),
+      appBar: AppBar(title: Text(l10n.appTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          const Text('Find a useful store nearby.'),
+          Semantics(header: true, child: Text(l10n.intro)),
           const SizedBox(height: 16),
           TextField(
             controller: queryController,
-            decoration: const InputDecoration(
-              labelText: 'What are you looking for?',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.queryLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: areaController,
-            decoration: const InputDecoration(
-              labelText: 'Area',
-              border: OutlineInputBorder(),
+            decoration: InputDecoration(
+              labelText: l10n.areaLabel,
+              border: const OutlineInputBorder(),
             ),
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
             onPressed: isLocating ? null : useCurrentLocation,
             icon: const Icon(Icons.my_location),
-            label: Text(isLocating ? 'Locating…' : 'Use my location'),
+            label: Text(isLocating ? l10n.locating : l10n.useLocation),
           ),
           if (locationMessage != null) ...[
             const SizedBox(height: 8),
-            Text(locationMessage!),
+            Semantics(liveRegion: true, child: Text(locationMessage!)),
           ],
           const SizedBox(height: 12),
           FilledButton(
             onPressed: isLoading || isLocating ? null : search,
-            child: Text(isLoading ? 'Searching…' : 'Search'),
+            child: Text(isLoading ? l10n.searching : l10n.search),
           ),
           if (errorMessage != null) ...[
             const SizedBox(height: 16),
-            Text(errorMessage!, style: TextStyle(color: Colors.red.shade700)),
+            Semantics(
+              liveRegion: true,
+              child: Text(
+                errorMessage!,
+                style: TextStyle(color: Colors.red.shade700),
+              ),
+            ),
             const SizedBox(height: 8),
             OutlinedButton(
               onPressed: isLoading ? null : search,
-              child: const Text('Retry'),
+              child: Text(l10n.retry),
             ),
           ],
           ...results.map((store) {
             final categories = store.categories.join(', ');
             final distance = store.distanceMeters == null
-                ? 'Distance unknown'
-                : '${store.distanceMeters} m';
-            return Card(
-              child: ListTile(
-                title: Text(store.name),
-                subtitle: Text(
-                  '$categories · $distance\n'
-                  '${store.addressSummary}\n${store.openState}',
-                ),
-                onTap: widget.apiClient == null
-                    ? null
-                    : () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => StoreDetailPage(
-                              apiClient: widget.apiClient!,
-                              storeId: store.storeId,
+                ? l10n.distanceUnknown
+                : l10n.meters(store.distanceMeters!);
+            final openState = l10n.openState(store.openState);
+            return Semantics(
+              button: true,
+              label: l10n.resultLabel(
+                store.name,
+                categories,
+                distance,
+                openState,
+              ),
+              hint: l10n.openStoreDetails,
+              child: Card(
+                child: ListTile(
+                  title: Text(store.name),
+                  subtitle: Text(
+                    '$categories · $distance\n'
+                    '${store.addressSummary}\n$openState',
+                  ),
+                  onTap: widget.apiClient == null
+                      ? null
+                      : () => Navigator.of(context).push(
+                            MaterialPageRoute<void>(
+                              builder: (_) => StoreDetailPage(
+                                apiClient: widget.apiClient!,
+                                storeId: store.storeId,
+                              ),
                             ),
                           ),
-                        ),
+                ),
               ),
             );
           }),
           if (hasSearched && results.isEmpty && errorMessage == null)
-            const Padding(
-              padding: EdgeInsets.only(top: 16),
-              child: Text('No stores found.'),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text(l10n.noStores),
             ),
         ],
       ),
@@ -271,8 +294,9 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: const Text('Store details')),
+      appBar: AppBar(title: Text(l10n.storeDetails)),
       body: FutureBuilder<StoreDetail>(
         future: detailFuture,
         builder: (context, snapshot) {
@@ -281,19 +305,18 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
           }
           if (snapshot.hasError) {
             final error = snapshot.error;
+            final message = error is DiscoveryApiException
+                ? discoveryErrorMessage(error, l10n)
+                : l10n.unableLoadDetails;
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    error is DiscoveryApiException
-                        ? error.message
-                        : 'Unable to load store details.',
-                  ),
+                  Text(message),
                   const SizedBox(height: 8),
                   OutlinedButton(
                     onPressed: () => setState(() => loadDetail()),
-                    child: const Text('Retry'),
+                    child: Text(l10n.retry),
                   ),
                 ],
               ),
@@ -309,13 +332,28 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
                 style: Theme.of(context).textTheme.headlineSmall,
               ),
               const SizedBox(height: 12),
-              Text(store.openState),
+              Text(l10n.openState(store.openState)),
               const SizedBox(height: 12),
-              Text(store.address),
+              Semantics(
+                label: '${l10n.address}: ${store.address}',
+                child: Text(store.address),
+              ),
               const SizedBox(height: 12),
-              Text(store.businessHours.join('\n')),
-              if (store.phone != null) Text(store.phone!),
-              if (store.website != null) Text(store.website!),
+              Semantics(
+                label:
+                    '${l10n.businessHours}: ${store.businessHours.join('\n')}',
+                child: Text(store.businessHours.join('\n')),
+              ),
+              if (store.phone != null)
+                Semantics(
+                  label: '${l10n.phone}: ${store.phone}',
+                  child: Text(store.phone!),
+                ),
+              if (store.website != null)
+                Semantics(
+                  label: '${l10n.website}: ${store.website}',
+                  child: Text(store.website!),
+                ),
             ],
           );
         },
@@ -323,3 +361,24 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
     );
   }
 }
+
+String discoveryErrorMessage(
+  DiscoveryApiException error,
+  AppLocalizations l10n,
+) => switch (error.failure) {
+      DiscoveryFailure.timeout => l10n.discoveryTimedOut,
+      DiscoveryFailure.network => l10n.noNetwork,
+      DiscoveryFailure.unavailable => l10n.discoveryUnavailable,
+      DiscoveryFailure.invalidResponse => l10n.invalidDiscoveryResponse,
+    };
+
+String locationErrorMessage(
+  LocationException error,
+  AppLocalizations l10n,
+) => switch (error.failure) {
+      LocationFailure.servicesDisabled => l10n.locationServicesDisabled,
+      LocationFailure.permissionDenied => l10n.locationPermissionDenied,
+      LocationFailure.permissionDeniedForever =>
+        l10n.locationPermissionDisabled,
+      LocationFailure.unknown => l10n.unableReadLocation,
+    };
