@@ -94,6 +94,7 @@ class StoreSummary {
     required this.storeId,
     required this.name,
     required this.categories,
+    required this.distanceMeters,
     required this.addressSummary,
     required this.openState,
   });
@@ -103,6 +104,7 @@ class StoreSummary {
       storeId: json['storeId'] as String,
       name: json['name'] as String,
       categories: (json['categories'] as List<dynamic>).cast<String>(),
+      distanceMeters: json['distanceMeters'] as int?,
       addressSummary: json['addressSummary'] as String,
       openState: json['openState'] as String,
     );
@@ -111,6 +113,7 @@ class StoreSummary {
   final String storeId;
   final String name;
   final List<String> categories;
+  final int? distanceMeters;
   final String addressSummary;
   final String openState;
 }

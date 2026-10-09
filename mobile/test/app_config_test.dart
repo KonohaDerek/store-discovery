@@ -9,4 +9,10 @@ void main() {
 
     expect(config.apiUri, client.baseUri);
   });
+
+  test('reports when no API URL was supplied', () {
+    const config = AppConfig(apiBaseUrl: '');
+
+    expect(config.isConfigured, isFalse);
+  });
 }

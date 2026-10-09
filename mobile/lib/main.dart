@@ -4,8 +4,11 @@ import 'api/discovery_api_client.dart';
 import 'config/app_config.dart';
 
 void main() {
+  final config = AppConfig.fromEnvironment();
   runApp(StoreDiscoveryApp(
-    apiClient: DiscoveryApiClient(baseUri: AppConfig.fromEnvironment().apiUri),
+    apiClient: config.isConfigured
+        ? DiscoveryApiClient(baseUri: config.apiUri)
+        : null,
   ));
 }
 
@@ -125,11 +128,18 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
             const SizedBox(height: 16),
             Text(errorMessage!, style: TextStyle(color: Colors.red.shade700)),
           ],
-          ...results.map(
-            (store) => Card(
+          ...results.map((store) {
+            final categories = store.categories.join(', ');
+            final distance = store.distanceMeters == null
+                ? 'Distance unknown'
+                : '${store.distanceMeters} m';
+            return Card(
               child: ListTile(
                 title: Text(store.name),
-                subtitle: Text('${store.addressSummary}\n${store.openState}'),
+                subtitle: Text(
+                  '$categories · $distance\n'
+                  '${store.addressSummary}\n${store.openState}',
+                ),
                 onTap: widget.apiClient == null
                     ? null
                     : () => Navigator.of(context).push(
@@ -141,8 +151,8 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
                           ),
                         ),
               ),
-            ),
-          ),
+            );
+          }),
           if (hasSearched && results.isEmpty && errorMessage == null)
             const Padding(
               padding: EdgeInsets.only(top: 16),

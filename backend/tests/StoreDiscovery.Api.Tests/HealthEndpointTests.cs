@@ -66,6 +66,16 @@ public sealed class HealthEndpointTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
+    public async Task Discovery_rejects_non_finite_coordinates()
+    {
+        using var response = await client.GetAsync(
+            "/api/v1/stores/discover?q=cafe&area=Taipei&lat=NaN&lng=NaN");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains("outside the valid range", await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task Store_detail_returns_the_requested_store()
     {
         using var response = await client.GetAsync("/api/v1/stores/sample-cafe-1");
