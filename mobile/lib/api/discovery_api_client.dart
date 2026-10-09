@@ -160,25 +160,29 @@ class StoreDetail {
     this.phone,
     this.website,
     this.navigationTarget,
+    this.attribution,
   });
 
   factory StoreDetail.fromJson(Map<String, dynamic> json) {
     return StoreDetail(
       name: json['name'] as String,
-      address: json['fullAddress'] as String,
-      businessHours: (json['businessHours'] as List<dynamic>).cast<String>(),
-      openState: json['openState'] as String,
+      address: json['fullAddress'] as String?,
+      businessHours:
+          (json['businessHours'] as List<dynamic>? ?? const []).cast<String>(),
+      openState: json['openState'] as String? ?? 'unknown',
       phone: json['phone'] as String?,
       website: json['website'] as String?,
       navigationTarget: json['navigationTarget'] as String?,
+      attribution: json['attribution'] as String?,
     );
   }
 
   final String name;
-  final String address;
+  final String? address;
   final List<String> businessHours;
   final String openState;
   final String? phone;
   final String? website;
   final String? navigationTarget;
+  final String? attribution;
 }

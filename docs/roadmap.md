@@ -21,6 +21,8 @@ GitHub Issues are the source of truth for execution. This document defines order
   flows cover manual-area search, results, and store detail.
 - #22 Accessibility and localization: core strings use a Traditional Chinese
   baseline with English fallback, and search/detail states expose semantics.
+- #7 Store detail: mobile parsing and presentation now cover navigation target,
+  attribution, and explicit unknown values for missing provider fields.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;
   required-check enforcement still belongs to GitHub branch protection settings.
 
