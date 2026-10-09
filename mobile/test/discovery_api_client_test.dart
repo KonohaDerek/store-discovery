@@ -22,6 +22,7 @@ void main() {
     expect(response.items.single.name, 'North Gate Coffee');
     expect(response.items.single.storeId, 'sample-cafe-1');
     expect(response.items.single.categories, ['food.cafe']);
+    expect(response.items.single.distanceMeters, 350);
     expect(response.items.single.openState, 'open');
   });
 

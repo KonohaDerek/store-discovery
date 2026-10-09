@@ -25,7 +25,10 @@ public sealed class DiscoveryQuery
             return "lat/lng or area is required.";
         }
 
-        if (Lat is < -90 or > 90 || Lng is < -180 or > 180)
+        if ((Lat.HasValue && !double.IsFinite(Lat.Value)) ||
+            (Lng.HasValue && !double.IsFinite(Lng.Value)) ||
+            Lat is < -90 or > 90 ||
+            Lng is < -180 or > 180)
         {
             return "lat or lng is outside the valid range.";
         }

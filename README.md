@@ -6,7 +6,7 @@ Store Discovery is a mobile-first application for discovering nearby stores and 
 
 **Phase 1 — MVP scaffold**
 
-The foundation decisions are accepted. The repository now contains the first buildable Flutter application and ASP.NET Core API host; product functionality still follows an accepted SDD/OpenSpec change and GitHub Issue.
+The foundation decisions are accepted. The repository now contains the first Flutter application source and ASP.NET Core API host; platform runner setup and product functionality still follow accepted SDD/OpenSpec changes and GitHub Issues.
 
 ## Product goals
 
@@ -52,13 +52,18 @@ Run these commands from the DevContainer:
 cd mobile
 flutter analyze
 flutter test
-flutter build apk --debug
 cd ..
 dotnet build backend/StoreDiscovery.sln --configuration Release
 dotnet test backend/StoreDiscovery.sln --configuration Release
 ```
 
-The iOS simulator, Xcode build, signing, and distribution remain macOS host responsibilities.
+Platform runner generation and device builds remain a separate setup step. The
+iOS simulator, Xcode build, signing, and distribution remain macOS host
+responsibilities. Supply the backend URL explicitly when running the app:
+
+```bash
+flutter run --dart-define=API_BASE_URL=http://10.0.2.2:5000/api/v1
+```
 
 ## Agent development flow
 
