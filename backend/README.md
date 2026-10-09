@@ -33,3 +33,9 @@ The discovery endpoint currently uses a deterministic `SampleStoreProvider` so
 the mobile vertical slice can be exercised without paid or live provider calls.
 The Google Places adapter remains behind `IStoreProvider` and is the next
 provider integration step.
+
+Discovery ranking is provider-independent: open stores rank before unknown and
+closed stores, then results sort by ascending distance, case-insensitive name,
+and stable store ID. `radiusMeters` requires coordinates and uses great-circle
+distance in meters; area-only queries retain fixture distance values until a
+provider supplies a location-relative distance.
