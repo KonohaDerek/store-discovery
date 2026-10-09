@@ -76,6 +76,18 @@ public sealed class HealthEndpointTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
+    public async Task Discovery_rejects_radius_without_coordinates()
+    {
+        using var response = await client.GetAsync(
+            "/api/v1/stores/discover?q=cafe&area=Taipei&radiusMeters=500");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Contains(
+            "radiusMeters requires lat and lng",
+            await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task Store_detail_returns_the_requested_store()
     {
         using var response = await client.GetAsync("/api/v1/stores/sample-cafe-1");

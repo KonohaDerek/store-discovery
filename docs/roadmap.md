@@ -13,6 +13,8 @@ GitHub Issues are the source of truth for execution. This document defines order
 - #4 Location input: explicit device-location action with permission/denied
   fallback to manual area; platform permission declarations remain in mobile
   runner setup.
+- #19 Normalized filters and ranking: category filtering, coordinate-relative
+  distance/radius behavior, and deterministic open-state ranking implemented.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;
   required-check enforcement still belongs to GitHub branch protection settings.
 

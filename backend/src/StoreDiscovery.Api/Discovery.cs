@@ -38,6 +38,11 @@ public sealed class DiscoveryQuery
             return "radiusMeters must be between 1 and 50000.";
         }
 
+        if (RadiusMeters.HasValue && (!Lat.HasValue || !Lng.HasValue))
+        {
+            return "radiusMeters requires lat and lng.";
+        }
+
         return null;
     }
 }
@@ -132,14 +137,69 @@ public sealed class SampleStoreProvider : IStoreProvider
         var category = query.Category?.Trim();
         var items = Stores
             .Where(store =>
-                (string.IsNullOrWhiteSpace(category) || store.Categories.Contains(category)) &&
+                (string.IsNullOrWhiteSpace(category) ||
+                 store.Categories.Contains(category, StringComparer.OrdinalIgnoreCase)) &&
                 (string.IsNullOrWhiteSpace(search) ||
                  store.Name.Contains(search, StringComparison.OrdinalIgnoreCase) ||
-                 store.Categories.Any(value => value.Contains(search, StringComparison.OrdinalIgnoreCase))))
+                 store.Categories.Any(value =>
+                     value.Contains(search, StringComparison.OrdinalIgnoreCase))))
+            .Select(store => WithDistance(store, query))
+            .Where(store =>
+                !query.RadiusMeters.HasValue ||
+                store.DistanceMeters is not null &&
+                store.DistanceMeters.Value <= query.RadiusMeters.Value)
+            .OrderBy(store => OpenStateRank(store.OpenState))
+            .ThenBy(store => store.DistanceMeters ?? int.MaxValue)
+            .ThenBy(store => store.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(store => store.StoreId, StringComparer.Ordinal)
             .ToArray();
 
         return Task.FromResult<IReadOnlyList<StoreSummary>>(items);
     }
+
+    private static StoreSummary WithDistance(StoreSummary store, DiscoveryQuery query)
+    {
+        if (!query.Lat.HasValue || !query.Lng.HasValue)
+        {
+            return store;
+        }
+
+        return store with
+        {
+            DistanceMeters = DistanceMeters(
+                query.Lat.Value,
+                query.Lng.Value,
+                store.Location)
+        };
+    }
+
+    private static int OpenStateRank(string openState) => openState switch
+    {
+        "open" => 0,
+        "unknown" => 1,
+        "closed" => 2,
+        _ => 3
+    };
+
+    private static int DistanceMeters(double latitude, double longitude, StoreLocation target)
+    {
+        const double earthRadiusMeters = 6_371_000;
+        var latitudeDelta = ToRadians(target.Lat - latitude);
+        var longitudeDelta = ToRadians(target.Lng - longitude);
+        var originLatitude = ToRadians(latitude);
+        var targetLatitude = ToRadians(target.Lat);
+        var a = Math.Pow(Math.Sin(latitudeDelta / 2), 2) +
+            Math.Cos(originLatitude) *
+            Math.Cos(targetLatitude) *
+            Math.Pow(Math.Sin(longitudeDelta / 2), 2);
+        var centralAngle = 2 * Math.Atan2(
+            Math.Sqrt(Math.Clamp(a, 0, 1)),
+            Math.Sqrt(1 - Math.Clamp(a, 0, 1)));
+
+        return (int)Math.Round(earthRadiusMeters * centralAngle, MidpointRounding.AwayFromZero);
+    }
+
+    private static double ToRadians(double degrees) => degrees * Math.PI / 180;
 
     public Task<StoreDetail?> GetDetailAsync(
         string storeId,
