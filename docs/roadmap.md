@@ -2,6 +2,17 @@
 
 GitHub Issues are the source of truth for execution. This document defines ordering and phase gates.
 
+## Current implementation status
+
+- #16 Mobile scaffold: source and widget-test contract implemented; DevContainer
+  platform generation and Android build verification remain.
+- #17 Backend scaffold: .NET 10 API host, live/ready health endpoints,
+  configuration validation, correlation logging, and integration tests implemented.
+- Discovery vertical slice: versioned discovery endpoint, deterministic sample
+  provider, and Flutter search/results shell implemented; real provider adapter remains.
+- #12 CI quality gates: workflow implemented after the #16/#17 source checks;
+  required-check enforcement still belongs to GitHub branch protection settings.
+
 ## Phase 0 — Foundation
 
 ### Architecture decisions — do first

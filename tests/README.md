@@ -1,6 +1,7 @@
 # Tests
 
-Cross-module test assets live here.
+Cross-module test assets live here. The first executable backend integration test
+lives with the API test project; mobile widget tests live under `mobile/test/`.
 
 Initial strategy:
 - domain/unit tests inside implementation modules
