@@ -91,6 +91,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       isLoading = true;
       errorMessage = null;
       results = const [];
+      hasSearched = true;
     });
 
     try {
@@ -103,7 +104,6 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       if (!mounted) return;
       setState(() {
         results = response.items;
-        hasSearched = true;
       });
     } on DiscoveryApiException catch (error) {
       if (!mounted) return;
@@ -200,6 +200,11 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
           if (errorMessage != null) ...[
             const SizedBox(height: 16),
             Text(errorMessage!, style: TextStyle(color: Colors.red.shade700)),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: isLoading ? null : search,
+              child: const Text('Retry'),
+            ),
           ],
           ...results.map((store) {
             final categories = store.categories.join(', ');
@@ -252,11 +257,15 @@ class StoreDetailPage extends StatefulWidget {
 }
 
 class _StoreDetailPageState extends State<StoreDetailPage> {
-  late final Future<StoreDetail> detailFuture;
+  late Future<StoreDetail> detailFuture;
 
   @override
   void initState() {
     super.initState();
+    loadDetail();
+  }
+
+  void loadDetail() {
     detailFuture = widget.apiClient.getStore(widget.storeId);
   }
 
@@ -273,10 +282,20 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
           if (snapshot.hasError) {
             final error = snapshot.error;
             return Center(
-              child: Text(
-                error is DiscoveryApiException
-                    ? error.message
-                    : 'Unable to load store details.',
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    error is DiscoveryApiException
+                        ? error.message
+                        : 'Unable to load store details.',
+                  ),
+                  const SizedBox(height: 8),
+                  OutlinedButton(
+                    onPressed: () => setState(() => loadDetail()),
+                    child: const Text('Retry'),
+                  ),
+                ],
               ),
             );
           }

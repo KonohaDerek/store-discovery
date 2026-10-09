@@ -1,8 +1,11 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 class DiscoveryApiClient {
   const DiscoveryApiClient({required this.baseUri});
+
+  static const requestTimeout = Duration(seconds: 10);
 
   final Uri baseUri;
 
@@ -31,55 +34,75 @@ class DiscoveryApiClient {
       path: '${baseUri.path.replaceFirst(RegExp(r'/$'), '')}/stores/discover',
       queryParameters: parameters,
     );
-    final httpClient = HttpClient();
-
-    try {
-      final request = await httpClient.getUrl(uri);
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
-
-      if (response.statusCode != HttpStatus.ok) {
-        final error = json['error'] as Map<String, dynamic>?;
-        throw DiscoveryApiException(
-          error?['message'] as String? ?? 'Discovery request failed.',
-        );
-      }
-
-      return DiscoveryResponse.fromJson(json);
-    } finally {
-      httpClient.close();
-    }
+    final json = await _getJson(uri, 'Discovery request failed.');
+    return DiscoveryResponse.fromJson(json);
   }
 
   Future<StoreDetail> getStore(String storeId) async {
     final path = '${baseUri.path.replaceFirst(RegExp(r'/$'), '')}/stores/'
         '${Uri.encodeComponent(storeId)}';
-    final httpClient = HttpClient();
+    final json = await _getJson(
+      baseUri.replace(path: path),
+      'Store detail request failed.',
+    );
+    return StoreDetail.fromJson(json);
+  }
+
+  Future<Map<String, dynamic>> _getJson(Uri uri, String fallbackMessage) async {
+    final httpClient = HttpClient()..connectionTimeout = requestTimeout;
 
     try {
-      final request = await httpClient.getUrl(baseUri.replace(path: path));
-      final response = await request.close();
-      final body = await response.transform(utf8.decoder).join();
+      final request = await httpClient.getUrl(uri).timeout(requestTimeout);
+      final response = await request.close().timeout(requestTimeout);
+      final body = await response
+          .transform(utf8.decoder)
+          .join()
+          .timeout(requestTimeout);
       final json = jsonDecode(body) as Map<String, dynamic>;
 
       if (response.statusCode != HttpStatus.ok) {
         final error = json['error'] as Map<String, dynamic>?;
         throw DiscoveryApiException(
-          error?['message'] as String? ?? 'Store detail request failed.',
+          DiscoveryFailure.unavailable,
+          error?['message'] as String? ?? fallbackMessage,
         );
       }
 
-      return StoreDetail.fromJson(json);
+      return json;
+    } on DiscoveryApiException {
+      rethrow;
+    } on TimeoutException {
+      throw const DiscoveryApiException(
+        DiscoveryFailure.timeout,
+        'The discovery service timed out. Try again.',
+      );
+    } on SocketException {
+      throw const DiscoveryApiException(
+        DiscoveryFailure.network,
+        'No network connection. Check your connection and try again.',
+      );
+    } on FormatException {
+      throw const DiscoveryApiException(
+        DiscoveryFailure.invalidResponse,
+        'The discovery service returned an invalid response.',
+      );
+    } on HttpException {
+      throw const DiscoveryApiException(
+        DiscoveryFailure.unavailable,
+        'The discovery service is unavailable. Try again.',
+      );
     } finally {
-      httpClient.close();
+      httpClient.close(force: true);
     }
   }
 }
 
-class DiscoveryApiException implements Exception {
-  const DiscoveryApiException(this.message);
+enum DiscoveryFailure { timeout, network, unavailable, invalidResponse }
 
+class DiscoveryApiException implements Exception {
+  const DiscoveryApiException(this.failure, this.message);
+
+  final DiscoveryFailure failure;
   final String message;
 }
 
