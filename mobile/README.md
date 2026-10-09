@@ -22,3 +22,9 @@ flutter analyze
 flutter test
 flutter build apk --debug
 ```
+
+The deterministic discovery smoke test can be run without provider credentials:
+
+```bash
+flutter test test/discovery_smoke_test.dart
+```
