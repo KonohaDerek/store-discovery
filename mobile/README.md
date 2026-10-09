@@ -9,6 +9,11 @@ only supplies Xcode for iOS simulator, build, signing, and distribution work.
 Set `API_BASE_URL` with `--dart-define` when running the app. For the Android
 emulator, use the host alias `http://10.0.2.2:5000/api/v1`.
 
+The app requests device location only after the user taps `Use my location`.
+If permission or location services are unavailable, the manual area field
+remains available. Platform permission declarations belong to the separate
+mobile runner setup.
+
 ## Checks
 
 ```bash

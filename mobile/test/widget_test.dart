@@ -9,6 +9,7 @@ void main() {
     expect(find.text('Find a useful store nearby.'), findsOneWidget);
     expect(find.text('What are you looking for?'), findsOneWidget);
     expect(find.text('Area'), findsOneWidget);
+    expect(find.text('Use my location'), findsOneWidget);
     expect(find.text('Search'), findsOneWidget);
   });
 }

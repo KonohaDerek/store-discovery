@@ -10,12 +10,22 @@ class DiscoveryApiClient {
     required String query,
     String? category,
     String? area,
+    double? latitude,
+    double? longitude,
+    int? radiusMeters,
   }) async {
     final parameters = <String, String>{'q': query};
     if (category != null && category.isNotEmpty) {
       parameters['category'] = category;
     }
     if (area != null && area.isNotEmpty) parameters['area'] = area;
+    if (latitude != null && longitude != null) {
+      parameters['lat'] = latitude.toString();
+      parameters['lng'] = longitude.toString();
+    }
+    if (radiusMeters != null) {
+      parameters['radiusMeters'] = radiusMeters.toString();
+    }
 
     final uri = baseUri.replace(
       path: '${baseUri.path.replaceFirst(RegExp(r'/$'), '')}/stores/discover',
