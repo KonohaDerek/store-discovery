@@ -45,7 +45,10 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
       address: '100 Zhongxiao West Road, Taipei',
       businessHours: ['09:00–18:00'],
       openState: 'open',
+      phone: '02-1234-5678',
+      website: 'https://example.com',
       navigationTarget: 'https://maps.google.com/',
+      attribution: 'Fixture provider data',
     );
   }
 }
@@ -75,6 +78,10 @@ void main() {
     expect(find.text('Store details'), findsOneWidget);
     expect(find.text('100 Zhongxiao West Road, Taipei'), findsOneWidget);
     expect(find.text('09:00–18:00'), findsOneWidget);
+    expect(find.text('02-1234-5678'), findsOneWidget);
+    expect(find.text('https://example.com'), findsOneWidget);
+    expect(find.text('https://maps.google.com/'), findsOneWidget);
+    expect(find.text('Fixture provider data'), findsOneWidget);
   });
 
   testWidgets('shows provider failure with a retry action', (tester) async {

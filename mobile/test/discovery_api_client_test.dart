@@ -47,5 +47,21 @@ void main() {
     expect(detail.name, 'North Gate Coffee');
     expect(detail.businessHours, ['09:00–18:00']);
     expect(detail.openState, 'open');
+    expect(detail.navigationTarget, 'https://maps.google.com/');
+    expect(detail.attribution, 'Sample provider data');
+  });
+
+  test('keeps missing store detail fields explicit for the UI', () {
+    final detail = StoreDetail.fromJson({
+      'name': 'Unknown Store',
+    });
+
+    expect(detail.address, isNull);
+    expect(detail.businessHours, isEmpty);
+    expect(detail.openState, 'unknown');
+    expect(detail.phone, isNull);
+    expect(detail.website, isNull);
+    expect(detail.navigationTarget, isNull);
+    expect(detail.attribution, isNull);
   });
 }

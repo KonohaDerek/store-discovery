@@ -324,6 +324,15 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
           }
 
           final store = snapshot.data!;
+          final address = store.address ?? l10n.unknownValue;
+          final businessHours = store.businessHours.isEmpty
+              ? l10n.unknownValue
+              : store.businessHours.join('\n');
+          final phone = store.phone ?? l10n.unknownValue;
+          final website = store.website ?? l10n.unknownValue;
+          final navigationTarget =
+              store.navigationTarget ?? l10n.unknownValue;
+          final attribution = store.attribution ?? l10n.unknownValue;
           return ListView(
             padding: const EdgeInsets.all(16),
             children: [
@@ -335,25 +344,30 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
               Text(l10n.openState(store.openState)),
               const SizedBox(height: 12),
               Semantics(
-                label: '${l10n.address}: ${store.address}',
-                child: Text(store.address),
+                label: '${l10n.address}: $address',
+                child: Text(address),
               ),
               const SizedBox(height: 12),
               Semantics(
-                label:
-                    '${l10n.businessHours}: ${store.businessHours.join('\n')}',
-                child: Text(store.businessHours.join('\n')),
+                label: '${l10n.businessHours}: $businessHours',
+                child: Text(businessHours),
               ),
-              if (store.phone != null)
-                Semantics(
-                  label: '${l10n.phone}: ${store.phone}',
-                  child: Text(store.phone!),
-                ),
-              if (store.website != null)
-                Semantics(
-                  label: '${l10n.website}: ${store.website}',
-                  child: Text(store.website!),
-                ),
+              Semantics(
+                label: '${l10n.phone}: $phone',
+                child: Text(phone),
+              ),
+              Semantics(
+                label: '${l10n.website}: $website',
+                child: Text(website),
+              ),
+              Semantics(
+                label: '${l10n.navigationTarget}: $navigationTarget',
+                child: Text(navigationTarget),
+              ),
+              Semantics(
+                label: '${l10n.attribution}: $attribution',
+                child: Text(attribution),
+              ),
             ],
           );
         },

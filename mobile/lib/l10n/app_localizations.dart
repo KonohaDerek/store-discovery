@@ -77,6 +77,10 @@ class AppLocalizations {
   String get businessHours => isChinese ? '營業時間' : 'Business hours';
   String get phone => isChinese ? '電話' : 'Phone';
   String get website => isChinese ? '網站' : 'Website';
+  String get navigationTarget =>
+      isChinese ? '導航目標' : 'Navigation target';
+  String get attribution => isChinese ? '資料來源' : 'Attribution';
+  String get unknownValue => isChinese ? '未提供' : 'Not available';
 
   String meters(int value) => isChinese ? '$value 公尺' : '$value m';
 
