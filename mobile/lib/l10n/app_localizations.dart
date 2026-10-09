@@ -20,6 +20,7 @@ class AppLocalizations {
       : 'Find a useful store nearby.';
   String get queryLabel =>
       isChinese ? '想找什麼？' : 'What are you looking for?';
+  String get categoryLabel => isChinese ? '分類' : 'Category';
   String get areaLabel => isChinese ? '區域' : 'Area';
   String get useLocation =>
       isChinese ? '使用我的位置' : 'Use my location';

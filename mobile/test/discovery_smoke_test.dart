@@ -7,6 +7,8 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
       : super(baseUri: Uri.parse('http://fixture'));
 
   final bool failDiscovery;
+  String? lastQuery;
+  String? lastCategory;
 
   @override
   Future<DiscoveryResponse> discover({
@@ -17,6 +19,8 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
     double? longitude,
     int? radiusMeters,
   }) async {
+    lastQuery = query;
+    lastCategory = category;
     if (failDiscovery) {
       throw const DiscoveryApiException(
         DiscoveryFailure.unavailable,
@@ -98,5 +102,19 @@ void main() {
       findsOneWidget,
     );
     expect(find.text('Retry'), findsOneWidget);
+  });
+
+  testWidgets('accepts a category without a keyword', (tester) async {
+    final client = FixtureDiscoveryClient();
+    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+
+    await tester.enterText(find.byType(TextField).at(1), 'food.cafe');
+    await tester.enterText(find.byType(TextField).last, 'Taipei');
+    await tester.tap(find.text('Search'));
+    await tester.pumpAndSettle();
+
+    expect(client.lastQuery, isEmpty);
+    expect(client.lastCategory, 'food.cafe');
+    expect(find.text('North Gate Coffee'), findsOneWidget);
   });
 }
