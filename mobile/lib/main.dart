@@ -91,6 +91,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   final queryController = TextEditingController();
   final categoryController = TextEditingController();
   final areaController = TextEditingController();
+  final favoriteStores = <StoreSummary>[];
   final recentSearches = <RecentSearch>[];
   List<StoreSummary> results = const [];
   String? errorMessage;
@@ -179,6 +180,65 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
 
   void clearRecentSearches() {
     setState(recentSearches.clear);
+  }
+
+  bool isFavorite(StoreSummary store) =>
+      favoriteStores.any((favorite) => favorite.storeId == store.storeId);
+
+  void toggleFavorite(StoreSummary store) {
+    setState(() {
+      final index = favoriteStores.indexWhere(
+        (favorite) => favorite.storeId == store.storeId,
+      );
+      if (index >= 0) {
+        favoriteStores.removeAt(index);
+      } else {
+        favoriteStores.insert(0, store);
+      }
+    });
+  }
+
+  Widget storeTile(StoreSummary store, AppLocalizations l10n) {
+    final categories = store.categories.join(', ');
+    final distance = store.distanceMeters == null
+        ? l10n.distanceUnknown
+        : l10n.meters(store.distanceMeters!);
+    final openState = l10n.openState(store.openState);
+    final favorite = isFavorite(store);
+    return Semantics(
+      button: true,
+      label: l10n.resultLabel(
+        store.name,
+        categories,
+        distance,
+        openState,
+      ),
+      hint: l10n.openStoreDetails,
+      child: Card(
+        child: ListTile(
+          title: Text(store.name),
+          subtitle: Text(
+            '$categories · $distance\n'
+            '${store.addressSummary}\n$openState',
+          ),
+          trailing: IconButton(
+            icon: Icon(favorite ? Icons.star : Icons.star_border),
+            tooltip: l10n.favoriteAction(favorite),
+            onPressed: () => toggleFavorite(store),
+          ),
+          onTap: widget.apiClient == null
+              ? null
+              : () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => StoreDetailPage(
+                        apiClient: widget.apiClient!,
+                        storeId: store.storeId,
+                      ),
+                    ),
+                  ),
+        ),
+      ),
+    );
   }
 
   Future<void> useCurrentLocation() async {
@@ -292,6 +352,14 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
               ),
             ),
           ],
+          if (favoriteStores.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Semantics(
+              header: true,
+              child: Text(l10n.favorites),
+            ),
+            ...favoriteStores.map((store) => storeTile(store, l10n)),
+          ],
           if (errorMessage != null) ...[
             const SizedBox(height: 16),
             Semantics(
@@ -307,42 +375,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
               child: Text(l10n.retry),
             ),
           ],
-          ...results.map((store) {
-            final categories = store.categories.join(', ');
-            final distance = store.distanceMeters == null
-                ? l10n.distanceUnknown
-                : l10n.meters(store.distanceMeters!);
-            final openState = l10n.openState(store.openState);
-            return Semantics(
-              button: true,
-              label: l10n.resultLabel(
-                store.name,
-                categories,
-                distance,
-                openState,
-              ),
-              hint: l10n.openStoreDetails,
-              child: Card(
-                child: ListTile(
-                  title: Text(store.name),
-                  subtitle: Text(
-                    '$categories · $distance\n'
-                    '${store.addressSummary}\n$openState',
-                  ),
-                  onTap: widget.apiClient == null
-                      ? null
-                      : () => Navigator.of(context).push(
-                            MaterialPageRoute<void>(
-                              builder: (_) => StoreDetailPage(
-                                apiClient: widget.apiClient!,
-                                storeId: store.storeId,
-                              ),
-                            ),
-                          ),
-                ),
-              ),
-            );
-          }),
+          ...results.map((store) => storeTile(store, l10n)),
           if (hasSearched && results.isEmpty && errorMessage == null)
             Padding(
               padding: const EdgeInsets.only(top: 16),
