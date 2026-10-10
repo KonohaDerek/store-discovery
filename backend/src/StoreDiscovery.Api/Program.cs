@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -8,6 +10,24 @@ builder.Services
     .ValidateDataAnnotations()
     .ValidateOnStart();
 builder.Services.AddHealthChecks();
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = (context, _) =>
+    {
+        context.HttpContext.Response.Headers.RetryAfter = "60";
+        return ValueTask.CompletedTask;
+    };
+    options.AddPolicy("public-api", context =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 60,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+            }));
+});
 builder.Services.AddSingleton<IStoreProvider, SampleStoreProvider>();
 
 var app = builder.Build();
@@ -26,6 +46,7 @@ app.Use(async (context, next) =>
         await next();
     }
 });
+app.UseRateLimiter();
 
 app.MapHealthChecks("/health/live");
 app.MapHealthChecks("/health/ready");
@@ -49,7 +70,8 @@ app.MapGet(
 
         var items = await provider.DiscoverAsync(query, cancellationToken);
         return Results.Ok(new DiscoveryResponse(items, null));
-    });
+    })
+    .RequireRateLimiting("public-api");
 app.MapGet(
     "/api/v1/stores/{storeId}",
     async (
@@ -65,7 +87,8 @@ app.MapGet(
                 "The requested store was not found.",
                 CorrelationId(context))))
             : Results.Ok(detail);
-    });
+    })
+    .RequireRateLimiting("public-api");
 
 app.Run();
 
