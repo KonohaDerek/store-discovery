@@ -66,6 +66,7 @@ class DiscoveryHomePage extends StatefulWidget {
 
 class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   final queryController = TextEditingController();
+  final categoryController = TextEditingController();
   final areaController = TextEditingController();
   List<StoreSummary> results = const [];
   String? errorMessage;
@@ -78,6 +79,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   @override
   void dispose() {
     queryController.dispose();
+    categoryController.dispose();
     areaController.dispose();
     super.dispose();
   }
@@ -85,12 +87,14 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   Future<void> search() async {
     final l10n = AppLocalizations.of(context);
     final query = queryController.text.trim();
+    final category = categoryController.text.trim();
     final area = areaController.text.trim();
     if (widget.apiClient == null) {
       setState(() => errorMessage = l10n.searchNotConfigured);
       return;
     }
-    if (query.isEmpty || (area.isEmpty && location == null)) {
+    if ((query.isEmpty && category.isEmpty) ||
+        (area.isEmpty && location == null)) {
       setState(() => errorMessage = l10n.enterQueryAndArea);
       return;
     }
@@ -105,6 +109,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
     try {
       final response = await widget.apiClient!.discover(
         query: query,
+        category: category.isEmpty ? null : category,
         area: area.isEmpty ? null : area,
         latitude: location?.latitude,
         longitude: location?.longitude,
@@ -177,6 +182,14 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
             controller: queryController,
             decoration: InputDecoration(
               labelText: l10n.queryLabel,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: categoryController,
+            decoration: InputDecoration(
+              labelText: l10n.categoryLabel,
               border: const OutlineInputBorder(),
             ),
           ),
