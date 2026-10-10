@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
+import 'package:store_discovery/location/location_service.dart';
 import 'package:store_discovery/main.dart';
 
 class FixtureDiscoveryClient extends DiscoveryApiClient {
@@ -7,8 +8,10 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
       : super(baseUri: Uri.parse('http://fixture'));
 
   final bool failDiscovery;
+  var searchCalls = 0;
   String? lastQuery;
   String? lastCategory;
+  String? lastArea;
 
   @override
   Future<DiscoveryResponse> discover({
@@ -19,8 +22,10 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
     double? longitude,
     int? radiusMeters,
   }) async {
+    searchCalls++;
     lastQuery = query;
     lastCategory = category;
+    lastArea = area;
     if (failDiscovery) {
       throw const DiscoveryApiException(
         DiscoveryFailure.unavailable,
@@ -55,6 +60,12 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
       attribution: 'Fixture provider data',
     );
   }
+}
+
+class FixtureLocationService implements LocationService {
+  @override
+  Future<LocationPoint> currentLocation() async =>
+      const LocationPoint(latitude: 25.0478, longitude: 121.5170);
 }
 
 Future<void> searchWithManualArea(
@@ -116,5 +127,55 @@ void main() {
     expect(client.lastQuery, isEmpty);
     expect(client.lastCategory, 'food.cafe');
     expect(find.text('North Gate Coffee'), findsOneWidget);
+  });
+
+  testWidgets('repeats and clears recent manual searches', (tester) async {
+    final client = FixtureDiscoveryClient();
+    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+
+    await searchWithManualArea(tester, 'cafe');
+
+    expect(find.text('Recent searches'), findsOneWidget);
+    expect(find.text('cafe · Taipei'), findsOneWidget);
+
+    await tester.tap(find.text('cafe · Taipei'));
+    await tester.pumpAndSettle();
+
+    expect(client.searchCalls, 2);
+    expect(client.lastQuery, 'cafe');
+    expect(client.lastArea, 'Taipei');
+
+    await tester.tap(find.text('Clear recent searches'));
+    expect(find.text('Recent searches'), findsNothing);
+  });
+
+  testWidgets('keeps only the five most recent searches', (tester) async {
+    final client = FixtureDiscoveryClient();
+    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+
+    for (var index = 0; index < 6; index++) {
+      await searchWithManualArea(tester, 'query-$index');
+    }
+
+    expect(find.text('query-0 · Taipei'), findsNothing);
+    expect(find.text('query-1 · Taipei'), findsOneWidget);
+    expect(find.text('query-5 · Taipei'), findsOneWidget);
+  });
+
+  testWidgets('does not retain precise-location searches', (tester) async {
+    await tester.pumpWidget(
+      StoreDiscoveryApp(
+        apiClient: FixtureDiscoveryClient(),
+        locationService: FixtureLocationService(),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField).first, 'cafe');
+    await tester.tap(find.text('Use my location'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Search'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Recent searches'), findsNothing);
   });
 }

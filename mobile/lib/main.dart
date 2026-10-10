@@ -5,6 +5,27 @@ import 'config/app_config.dart';
 import 'l10n/app_localizations.dart';
 import 'location/location_service.dart';
 
+class RecentSearch {
+  const RecentSearch({
+    required this.query,
+    required this.category,
+    required this.area,
+  });
+
+  final String query;
+  final String category;
+  final String area;
+
+  String get label => [query, category, area]
+      .where((value) => value.isNotEmpty)
+      .join(' · ');
+
+  bool matches(String otherQuery, String otherCategory, String otherArea) =>
+      query == otherQuery &&
+      category == otherCategory &&
+      area == otherArea;
+}
+
 void main() {
   final config = AppConfig.fromEnvironment();
   runApp(StoreDiscoveryApp(
@@ -65,9 +86,12 @@ class DiscoveryHomePage extends StatefulWidget {
 }
 
 class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
+  static const maxRecentSearches = 5;
+
   final queryController = TextEditingController();
   final categoryController = TextEditingController();
   final areaController = TextEditingController();
+  final recentSearches = <RecentSearch>[];
   List<StoreSummary> results = const [];
   String? errorMessage;
   String? locationMessage;
@@ -116,6 +140,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
       );
       if (!mounted) return;
       setState(() {
+        rememberRecentSearch(query, category, area);
         results = response.items;
       });
     } on DiscoveryApiException catch (error) {
@@ -127,6 +152,33 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
+  }
+
+  void rememberRecentSearch(String query, String category, String area) {
+    if (area.isEmpty) return;
+    recentSearches.removeWhere(
+      (recent) => recent.matches(query, category, area),
+    );
+    recentSearches.insert(
+      0,
+      RecentSearch(query: query, category: category, area: area),
+    );
+    if (recentSearches.length > maxRecentSearches) {
+      recentSearches.removeLast();
+    }
+  }
+
+  Future<void> repeatRecentSearch(RecentSearch recent) async {
+    queryController.text = recent.query;
+    categoryController.text = recent.category;
+    areaController.text = recent.area;
+    location = null;
+    locationMessage = null;
+    await search();
+  }
+
+  void clearRecentSearches() {
+    setState(recentSearches.clear);
   }
 
   Future<void> useCurrentLocation() async {
@@ -216,6 +268,30 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
             onPressed: isLoading || isLocating ? null : search,
             child: Text(isLoading ? l10n.searching : l10n.search),
           ),
+          if (recentSearches.isNotEmpty) ...[
+            const SizedBox(height: 24),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Semantics(
+                  header: true,
+                  child: Text(l10n.recentSearches),
+                ),
+                TextButton(
+                  onPressed: clearRecentSearches,
+                  child: Text(l10n.clearRecentSearches),
+                ),
+              ],
+            ),
+            ...recentSearches.map(
+              (recent) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: const Icon(Icons.history),
+                title: Text(recent.label),
+                onTap: () => repeatRecentSearch(recent),
+              ),
+            ),
+          ],
           if (errorMessage != null) ...[
             const SizedBox(height: 16),
             Semantics(
