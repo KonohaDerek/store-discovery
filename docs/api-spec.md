@@ -11,6 +11,8 @@ Query parameters:
 - `category`: optional normalized category
 - `lat`, `lng`: coordinates when location-based
 - `radiusMeters`: bounded search radius
+- `openNow`: optional normalized filter; when true, only stores with
+  `openState: open` are returned
 - `area`: manual area alternative
 - `cursor`: optional pagination cursor
 

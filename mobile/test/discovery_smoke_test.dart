@@ -12,6 +12,8 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
   String? lastQuery;
   String? lastCategory;
   String? lastArea;
+  int? lastRadius;
+  bool? lastOpenNow;
 
   @override
   Future<DiscoveryResponse> discover({
@@ -21,11 +23,14 @@ class FixtureDiscoveryClient extends DiscoveryApiClient {
     double? latitude,
     double? longitude,
     int? radiusMeters,
+    bool openNow = false,
   }) async {
     searchCalls++;
     lastQuery = query;
     lastCategory = category;
     lastArea = area;
+    lastRadius = radiusMeters;
+    lastOpenNow = openNow;
     if (failDiscovery) {
       throw const DiscoveryApiException(
         DiscoveryFailure.unavailable,
@@ -197,5 +202,44 @@ void main() {
 
     expect(find.text('Favorites'), findsNothing);
     expect(find.byTooltip('Add to favorites'), findsOneWidget);
+  });
+
+  testWidgets('passes open-now and radius filters to discovery', (tester) async {
+    final client = FixtureDiscoveryClient();
+    await tester.pumpWidget(
+      StoreDiscoveryApp(
+        apiClient: client,
+        locationService: FixtureLocationService(),
+      ),
+    );
+
+    await tester.enterText(find.byType(TextField).first, 'cafe');
+    await tester.enterText(find.byType(TextField).at(2), '1000');
+    await tester.tap(find.text('Use my location'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byType(Switch));
+    await tester.tap(find.text('Search'));
+    await tester.pumpAndSettle();
+
+    expect(client.lastOpenNow, isTrue);
+    expect(client.lastRadius, 1000);
+    expect(find.text('North Gate Coffee'), findsOneWidget);
+  });
+
+  testWidgets('rejects a radius without device location', (tester) async {
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+    );
+
+    await tester.enterText(find.byType(TextField).first, 'cafe');
+    await tester.enterText(find.byType(TextField).at(2), '1000');
+    await tester.enterText(find.byType(TextField).last, 'Taipei');
+    await tester.tap(find.text('Search'));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('Use your current location before setting a radius.'),
+      findsOneWidget,
+    );
   });
 }

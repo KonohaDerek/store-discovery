@@ -88,6 +88,20 @@ public sealed class HealthEndpointTests : IClassFixture<WebApplicationFactory<Pr
     }
 
     [Fact]
+    public async Task Discovery_applies_open_now_filter()
+    {
+        using var response = await client.GetAsync(
+            "/api/v1/stores/discover?q=a&area=Taipei&openNow=true");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var body = await response.Content.ReadAsStringAsync();
+
+        Assert.Contains("North Gate Coffee", body);
+        Assert.DoesNotContain("Taipei Central Market", body);
+        Assert.DoesNotContain("Green Cross Pharmacy", body);
+    }
+
+    [Fact]
     public async Task Store_detail_returns_the_requested_store()
     {
         using var response = await client.GetAsync("/api/v1/stores/sample-cafe-1");

@@ -21,12 +21,14 @@ class AppLocalizations {
   String get queryLabel =>
       isChinese ? '想找什麼？' : 'What are you looking for?';
   String get categoryLabel => isChinese ? '分類' : 'Category';
+  String get radiusLabel => isChinese ? '搜尋半徑（公尺）' : 'Radius (m)';
   String get areaLabel => isChinese ? '區域' : 'Area';
   String get useLocation =>
       isChinese ? '使用我的位置' : 'Use my location';
   String get locating => isChinese ? '定位中…' : 'Locating…';
   String get search => isChinese ? '搜尋' : 'Search';
   String get searching => isChinese ? '搜尋中…' : 'Searching…';
+  String get openNow => isChinese ? '目前營業中' : 'Open now';
   String get retry => isChinese ? '重試' : 'Retry';
   String get recentSearches => isChinese ? '最近搜尋' : 'Recent searches';
   String get clearRecentSearches =>
@@ -43,6 +45,12 @@ class AppLocalizations {
   String get enterQueryAndArea => isChinese
       ? '請輸入需求和區域，或使用目前位置。'
       : 'Enter what you need and an area, or use your location.';
+  String get enterValidRadius => isChinese
+      ? '搜尋半徑必須是 1 到 50000 公尺。'
+      : 'Radius must be between 1 and 50000 meters.';
+  String get radiusRequiresLocation => isChinese
+      ? '搜尋半徑需要先使用目前位置。'
+      : 'Use your current location before setting a radius.';
   String get locationNotConfigured => isChinese
       ? '定位尚未設定，請改輸入區域。'
       : 'Location is not configured. Enter an area instead.';

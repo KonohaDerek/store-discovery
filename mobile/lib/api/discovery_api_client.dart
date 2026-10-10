@@ -16,6 +16,7 @@ class DiscoveryApiClient {
     double? latitude,
     double? longitude,
     int? radiusMeters,
+    bool openNow = false,
   }) async {
     final parameters = <String, String>{'q': query};
     if (category != null && category.isNotEmpty) {
@@ -29,6 +30,7 @@ class DiscoveryApiClient {
     if (radiusMeters != null) {
       parameters['radiusMeters'] = radiusMeters.toString();
     }
+    if (openNow) parameters['openNow'] = 'true';
 
     final uri = baseUri.replace(
       path: '${baseUri.path.replaceFirst(RegExp(r'/$'), '')}/stores/discover',

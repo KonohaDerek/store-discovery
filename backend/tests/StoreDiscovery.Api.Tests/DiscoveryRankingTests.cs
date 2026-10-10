@@ -47,4 +47,21 @@ public sealed class DiscoveryRankingTests
         var result = Assert.Single(results);
         Assert.Equal("sample-cafe-1", result.StoreId);
     }
+
+    [Fact]
+    public async Task Open_now_filter_excludes_unknown_and_closed_stores()
+    {
+        var results = await provider.DiscoverAsync(
+            new DiscoveryQuery
+            {
+                Q = "a",
+                Area = "Taipei",
+                OpenNow = true
+            },
+            CancellationToken.None);
+
+        var result = Assert.Single(results);
+        Assert.Equal("sample-cafe-1", result.StoreId);
+        Assert.Equal("open", result.OpenState);
+    }
 }
