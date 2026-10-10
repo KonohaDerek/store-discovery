@@ -27,6 +27,8 @@ GitHub Issues are the source of truth for execution. This document defines order
   result presentation, detail navigation, and state coverage implemented.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;
   required-check enforcement still belongs to GitHub branch protection settings.
+- #28 Recent searches: session-only manual search history with a five-item
+  retention limit, repeat action, clear action, and no precise location storage.
 
 ## Phase 0 — Foundation
 

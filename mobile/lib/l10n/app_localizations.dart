@@ -28,6 +28,9 @@ class AppLocalizations {
   String get search => isChinese ? '搜尋' : 'Search';
   String get searching => isChinese ? '搜尋中…' : 'Searching…';
   String get retry => isChinese ? '重試' : 'Retry';
+  String get recentSearches => isChinese ? '最近搜尋' : 'Recent searches';
+  String get clearRecentSearches =>
+      isChinese ? '清除搜尋紀錄' : 'Clear recent searches';
   String get noStores => isChinese ? '找不到店家。' : 'No stores found.';
   String get distanceUnknown => isChinese ? '距離未知' : 'Distance unknown';
   String get storeDetails => isChinese ? '店家詳細資料' : 'Store details';
