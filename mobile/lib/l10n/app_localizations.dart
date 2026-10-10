@@ -31,6 +31,10 @@ class AppLocalizations {
   String get recentSearches => isChinese ? '最近搜尋' : 'Recent searches';
   String get clearRecentSearches =>
       isChinese ? '清除搜尋紀錄' : 'Clear recent searches';
+  String get favorites => isChinese ? '收藏' : 'Favorites';
+  String favoriteAction(bool isFavorite) => isFavorite
+      ? (isChinese ? '取消收藏' : 'Remove from favorites')
+      : (isChinese ? '加入收藏' : 'Add to favorites');
   String get noStores => isChinese ? '找不到店家。' : 'No stores found.';
   String get distanceUnknown => isChinese ? '距離未知' : 'Distance unknown';
   String get storeDetails => isChinese ? '店家詳細資料' : 'Store details';

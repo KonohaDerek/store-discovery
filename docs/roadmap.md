@@ -29,6 +29,8 @@ GitHub Issues are the source of truth for execution. This document defines order
   required-check enforcement still belongs to GitHub branch protection settings.
 - #28 Recent searches: session-only manual search history with a five-item
   retention limit, repeat action, clear action, and no precise location storage.
+- #27 Favorites: session-local favorite / unfavorite using the normalized
+  `storeId`, with a favorites list and offline-safe local actions.
 
 ## Phase 0 — Foundation
 

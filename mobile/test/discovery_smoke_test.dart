@@ -178,4 +178,24 @@ void main() {
 
     expect(find.text('Recent searches'), findsNothing);
   });
+
+  testWidgets('adds, lists, and removes a favorite locally', (tester) async {
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+    );
+
+    await searchWithManualArea(tester, 'cafe');
+    await tester.tap(find.byTooltip('Add to favorites'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Favorites'), findsOneWidget);
+    expect(find.text('North Gate Coffee'), findsNWidgets(2));
+    expect(find.byTooltip('Remove from favorites'), findsNWidgets(2));
+
+    await tester.tap(find.byTooltip('Remove from favorites').first);
+    await tester.pumpAndSettle();
+
+    expect(find.text('Favorites'), findsNothing);
+    expect(find.byTooltip('Add to favorites'), findsOneWidget);
+  });
 }
