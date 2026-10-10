@@ -31,6 +31,9 @@ GitHub Issues are the source of truth for execution. This document defines order
   retention limit, repeat action, clear action, and no precise location storage.
 - #27 Favorites: session-local favorite / unfavorite using the normalized
   `storeId`, with a favorites list and offline-safe local actions.
+- #23 Security and abuse controls: validated API input, normalized safe errors,
+  backend-only provider secrets, native-client CORS decision, and a fixed-window
+  public API rate limit with integration coverage.
 
 ## Phase 0 — Foundation
 

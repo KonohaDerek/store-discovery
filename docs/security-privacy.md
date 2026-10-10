@@ -29,7 +29,11 @@
 - Bound radius/page sizes.
 - Apply provider timeouts and resilience controls.
 - Normalize upstream errors.
-- Add abuse/rate controls before public exposure.
+- Discovery and store-detail endpoints allow 60 requests per minute per remote
+  address, return 429 when exhausted, and do not queue excess requests.
+- The native mobile client does not require CORS; browser access is not enabled
+  until an explicit allowlist policy is defined.
+- Provider credentials remain backend-only and are never part of mobile config.
 
 ## Future accounts
 Before accounts are introduced, define deletion/export, retention, authentication lifecycle and migration of anonymous local data.
