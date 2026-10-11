@@ -40,6 +40,14 @@ class AppLocalizations {
   String get noStores => isChinese ? '找不到店家。' : 'No stores found.';
   String get distanceUnknown => isChinese ? '距離未知' : 'Distance unknown';
   String get storeDetails => isChinese ? '店家詳細資料' : 'Store details';
+  String get shareStore => isChinese ? '分享店家' : 'Share store';
+  String get unableShareStore =>
+      isChinese ? '無法分享店家連結。' : 'Unable to share the store link.';
+  String get invalidStoreLink =>
+      isChinese ? '店家連結無效。' : 'This store link is invalid.';
+  String get storeLinkUnavailable => isChinese
+      ? '目前無法開啟店家連結。'
+      : 'This store link is unavailable right now.';
   String get searchNotConfigured =>
       isChinese ? '搜尋尚未設定。' : 'Search is not configured.';
   String get enterQueryAndArea => isChinese

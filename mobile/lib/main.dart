@@ -1,9 +1,14 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 import 'api/discovery_api_client.dart';
 import 'config/app_config.dart';
+import 'deep_links/store_deep_link.dart';
+import 'deep_links/store_link_source.dart';
 import 'l10n/app_localizations.dart';
 import 'location/location_service.dart';
+import 'share/store_share_service.dart';
 
 class RecentSearch {
   const RecentSearch({
@@ -36,23 +41,113 @@ void main() {
   ));
 }
 
-class StoreDiscoveryApp extends StatelessWidget {
+class StoreDiscoveryApp extends StatefulWidget {
   const StoreDiscoveryApp({
     super.key,
     this.apiClient,
     this.locationService,
     this.locale,
+    this.linkSource,
+    this.shareService,
   });
 
   final DiscoveryApiClient? apiClient;
   final LocationService? locationService;
   final Locale? locale;
+  final StoreLinkSource? linkSource;
+  final StoreShareService? shareService;
+
+  @override
+  State<StoreDiscoveryApp> createState() => _StoreDiscoveryAppState();
+}
+
+class _StoreDiscoveryAppState extends State<StoreDiscoveryApp> {
+  final navigatorKey = GlobalKey<NavigatorState>();
+  late final StoreLinkSource linkSource;
+  late final StreamSubscription<Uri> linkSubscription;
+  Uri? pendingLink;
+  String? lastHandledLink;
+
+  @override
+  void initState() {
+    super.initState();
+    linkSource = widget.linkSource ?? AppLinksStoreLinkSource();
+    linkSubscription = linkSource.linkStream.listen(
+      handleIncomingLink,
+      onError: (_) {},
+    );
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final pending = pendingLink;
+      pendingLink = null;
+      if (pending != null) handleIncomingLink(pending);
+      await loadInitialLink();
+    });
+  }
+
+  @override
+  void dispose() {
+    linkSubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> loadInitialLink() async {
+    final uri = await linkSource.initialLink();
+    if (mounted && uri != null) handleIncomingLink(uri);
+  }
+
+  void handleIncomingLink(Uri uri) {
+    if (navigatorKey.currentState == null) {
+      pendingLink = uri;
+      return;
+    }
+
+    final linkKey = uri.toString();
+    if (linkKey == lastHandledLink) return;
+    lastHandledLink = linkKey;
+
+    final storeId = StoreDeepLink.storeIdFrom(uri);
+    final context = navigatorKey.currentContext;
+    if (storeId == null) {
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).invalidStoreLink),
+          ),
+        );
+      }
+      return;
+    }
+
+    final apiClient = widget.apiClient;
+    final navigator = navigatorKey.currentState;
+    if (apiClient == null || navigator == null) {
+      if (context != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context).storeLinkUnavailable),
+          ),
+        );
+      }
+      return;
+    }
+
+    navigator.push(
+      MaterialPageRoute<void>(
+        builder: (_) => StoreDetailPage(
+          apiClient: apiClient,
+          storeId: storeId,
+          shareService: widget.shareService,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: navigatorKey,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
-      locale: locale,
+      locale: widget.locale,
       localizationsDelegates: const [AppLocalizations.delegate],
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, _) =>
@@ -64,8 +159,9 @@ class StoreDiscoveryApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: DiscoveryHomePage(
-        apiClient: apiClient,
-        locationService: locationService,
+        apiClient: widget.apiClient,
+        locationService: widget.locationService,
+        shareService: widget.shareService,
       ),
     );
   }
@@ -76,10 +172,12 @@ class DiscoveryHomePage extends StatefulWidget {
     super.key,
     this.apiClient,
     this.locationService,
+    this.shareService,
   });
 
   final DiscoveryApiClient? apiClient;
   final LocationService? locationService;
+  final StoreShareService? shareService;
 
   @override
   State<DiscoveryHomePage> createState() => _DiscoveryHomePageState();
@@ -251,6 +349,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
                       builder: (_) => StoreDetailPage(
                         apiClient: widget.apiClient!,
                         storeId: store.storeId,
+                        shareService: widget.shareService,
                       ),
                     ),
                   ),
@@ -427,10 +526,12 @@ class StoreDetailPage extends StatefulWidget {
     super.key,
     required this.apiClient,
     required this.storeId,
+    this.shareService,
   });
 
   final DiscoveryApiClient apiClient;
   final String storeId;
+  final StoreShareService? shareService;
 
   @override
   State<StoreDetailPage> createState() => _StoreDetailPageState();
@@ -449,11 +550,32 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
     detailFuture = widget.apiClient.getStore(widget.storeId);
   }
 
+  Future<void> shareStore() async {
+    try {
+      await (widget.shareService ?? const PlatformStoreShareService())
+          .shareStore(widget.storeId);
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations.of(context).unableShareStore)),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(l10n.storeDetails)),
+      appBar: AppBar(
+        title: Text(l10n.storeDetails),
+        actions: [
+          IconButton(
+            tooltip: l10n.shareStore,
+            icon: const Icon(Icons.share),
+            onPressed: shareStore,
+          ),
+        ],
+      ),
       body: FutureBuilder<StoreDetail>(
         future: detailFuture,
         builder: (context, snapshot) {
