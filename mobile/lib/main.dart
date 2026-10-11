@@ -90,6 +90,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
 
   final queryController = TextEditingController();
   final categoryController = TextEditingController();
+  final radiusController = TextEditingController();
   final areaController = TextEditingController();
   final favoriteStores = <StoreSummary>[];
   final recentSearches = <RecentSearch>[];
@@ -100,11 +101,13 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
   bool isLoading = false;
   bool isLocating = false;
   bool hasSearched = false;
+  bool openNow = false;
 
   @override
   void dispose() {
     queryController.dispose();
     categoryController.dispose();
+    radiusController.dispose();
     areaController.dispose();
     super.dispose();
   }
@@ -113,7 +116,9 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
     final l10n = AppLocalizations.of(context);
     final query = queryController.text.trim();
     final category = categoryController.text.trim();
+    final radiusText = radiusController.text.trim();
     final area = areaController.text.trim();
+    final radius = radiusText.isEmpty ? null : int.tryParse(radiusText);
     if (widget.apiClient == null) {
       setState(() => errorMessage = l10n.searchNotConfigured);
       return;
@@ -121,6 +126,15 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
     if ((query.isEmpty && category.isEmpty) ||
         (area.isEmpty && location == null)) {
       setState(() => errorMessage = l10n.enterQueryAndArea);
+      return;
+    }
+    if (radiusText.isNotEmpty &&
+        (radius == null || radius < 1 || radius > 50000)) {
+      setState(() => errorMessage = l10n.enterValidRadius);
+      return;
+    }
+    if (radius != null && location == null) {
+      setState(() => errorMessage = l10n.radiusRequiresLocation);
       return;
     }
 
@@ -138,6 +152,8 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
         area: area.isEmpty ? null : area,
         latitude: location?.latitude,
         longitude: location?.longitude,
+        radiusMeters: radius,
+        openNow: openNow,
       );
       if (!mounted) return;
       setState(() {
@@ -173,6 +189,8 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
     queryController.text = recent.query;
     categoryController.text = recent.category;
     areaController.text = recent.area;
+    radiusController.clear();
+    openNow = false;
     location = null;
     locationMessage = null;
     await search();
@@ -307,6 +325,15 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
           ),
           const SizedBox(height: 12),
           TextField(
+            controller: radiusController,
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: l10n.radiusLabel,
+              border: const OutlineInputBorder(),
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextField(
             controller: areaController,
             decoration: InputDecoration(
               labelText: l10n.areaLabel,
@@ -323,6 +350,14 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
             const SizedBox(height: 8),
             Semantics(liveRegion: true, child: Text(locationMessage!)),
           ],
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: Text(l10n.openNow),
+            value: openNow,
+            onChanged: isLoading || isLocating
+                ? null
+                : (value) => setState(() => openNow = value),
+          ),
           const SizedBox(height: 12),
           FilledButton(
             onPressed: isLoading || isLocating ? null : search,

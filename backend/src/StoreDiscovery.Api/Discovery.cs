@@ -5,6 +5,7 @@ public sealed class DiscoveryQuery
     public double? Lat { get; set; }
     public double? Lng { get; set; }
     public int? RadiusMeters { get; set; }
+    public bool? OpenNow { get; set; }
     public string? Area { get; set; }
     public string? Cursor { get; set; }
 
@@ -148,6 +149,8 @@ public sealed class SampleStoreProvider : IStoreProvider
                 !query.RadiusMeters.HasValue ||
                 store.DistanceMeters is not null &&
                 store.DistanceMeters.Value <= query.RadiusMeters.Value)
+            .Where(store =>
+                !query.OpenNow.GetValueOrDefault() || store.OpenState == "open")
             .OrderBy(store => OpenStateRank(store.OpenState))
             .ThenBy(store => store.DistanceMeters ?? int.MaxValue)
             .ThenBy(store => store.Name, StringComparer.OrdinalIgnoreCase)

@@ -5,6 +5,7 @@
 - category: optional normalized category
 - latitude/longitude OR area
 - radiusMeters
+- openNow
 - locale
 - cursor
 
@@ -48,7 +49,9 @@ StoreSummary plus:
 - navigationTarget
 - attribution
 
-Unknown data stays unknown; it must never be synthesized as fact.
+Unknown data stays unknown; it must never be synthesized as fact. Providers
+that cannot determine current opening state return unknown; openNow=true
+excludes both unknown and closed results rather than guessing.
 
 ## Compatibility
 Public mobile contracts are versioned under `/api/v1`. Additive optional fields are preferred. Breaking semantic/schema changes require a new API version or an explicit coordinated migration.

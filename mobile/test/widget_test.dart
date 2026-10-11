@@ -16,6 +16,7 @@ class RetryClient extends DiscoveryApiClient {
     double? latitude,
     double? longitude,
     int? radiusMeters,
+    bool openNow = false,
   }) async {
     attempts++;
     if (shouldFail) {

@@ -34,6 +34,8 @@ GitHub Issues are the source of truth for execution. This document defines order
 - #23 Security and abuse controls: validated API input, normalized safe errors,
   backend-only provider secrets, native-client CORS decision, and a fixed-window
   public API rate limit with integration coverage.
+- #42 Advanced discovery filters: category, open-now, and location-based radius
+  filters with API validation, normalized provider capability behavior, and tests.
 
 ## Phase 0 — Foundation
 
