@@ -36,6 +36,9 @@ GitHub Issues are the source of truth for execution. This document defines order
   public API rate limit with integration coverage.
 - #42 Advanced discovery filters: category, open-now, and location-based radius
   filters with API validation, normalized provider capability behavior, and tests.
+- #41 Share links and deep links: canonical store URI, platform share action, and
+  installed-app link handling are implemented; native runner registration and
+  device verification remain part of the separate mobile runner setup.
 
 ## Phase 0 — Foundation
 

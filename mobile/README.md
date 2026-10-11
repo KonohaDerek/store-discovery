@@ -17,6 +17,12 @@ mobile runner setup.
 The core flow supports Traditional Chinese (`zh_TW`) with English as the
 fallback locale. Search results and error states include screen-reader labels.
 
+Store details can be shared with the canonical URI
+`store-discovery://store/<store-id>`. The app accepts the same URI when opened
+from an installed-app link and shows a recoverable error for invalid or
+unavailable store links. Platform runner registration is documented separately
+because this repository does not yet contain generated iOS/Android runners.
+
 ## Checks
 
 ```bash
