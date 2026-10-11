@@ -124,6 +124,13 @@ class DiscoveryResponse {
   final String? nextCursor;
 }
 
+class StoreCoordinates {
+  const StoreCoordinates({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
+}
+
 class StoreSummary {
   const StoreSummary({
     required this.storeId,
@@ -132,6 +139,7 @@ class StoreSummary {
     required this.distanceMeters,
     required this.addressSummary,
     required this.openState,
+    this.location,
   });
 
   factory StoreSummary.fromJson(Map<String, dynamic> json) {
@@ -142,6 +150,7 @@ class StoreSummary {
       distanceMeters: json['distanceMeters'] as int?,
       addressSummary: json['addressSummary'] as String,
       openState: json['openState'] as String,
+      location: _coordinatesFromJson(json['location']),
     );
   }
 
@@ -151,6 +160,7 @@ class StoreSummary {
   final int? distanceMeters;
   final String addressSummary;
   final String openState;
+  final StoreCoordinates? location;
 }
 
 class StoreDetail {
@@ -159,6 +169,7 @@ class StoreDetail {
     required this.address,
     required this.businessHours,
     required this.openState,
+    this.location,
     this.phone,
     this.website,
     this.navigationTarget,
@@ -172,6 +183,7 @@ class StoreDetail {
       businessHours:
           (json['businessHours'] as List<dynamic>? ?? const []).cast<String>(),
       openState: json['openState'] as String? ?? 'unknown',
+      location: _coordinatesFromJson(json['location']),
       phone: json['phone'] as String?,
       website: json['website'] as String?,
       navigationTarget: json['navigationTarget'] as String?,
@@ -183,8 +195,29 @@ class StoreDetail {
   final String? address;
   final List<String> businessHours;
   final String openState;
+  final StoreCoordinates? location;
   final String? phone;
   final String? website;
   final String? navigationTarget;
   final String? attribution;
+}
+
+StoreCoordinates? _coordinatesFromJson(Object? value) {
+  if (value is! Map<String, dynamic>) return null;
+  final latitude = value['lat'];
+  final longitude = value['lng'];
+  if (latitude is! num || longitude is! num) return null;
+  final coordinates = StoreCoordinates(
+    latitude: latitude.toDouble(),
+    longitude: longitude.toDouble(),
+  );
+  if (!coordinates.latitude.isFinite ||
+      !coordinates.longitude.isFinite ||
+      coordinates.latitude < -90 ||
+      coordinates.latitude > 90 ||
+      coordinates.longitude < -180 ||
+      coordinates.longitude > 180) {
+    return null;
+  }
+  return coordinates;
 }

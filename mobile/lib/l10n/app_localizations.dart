@@ -95,6 +95,14 @@ class AppLocalizations {
   String get unableLoadDetails => isChinese
       ? '無法載入店家詳細資料。'
       : 'Unable to load store details.';
+  String get mapUnavailable => isChinese
+      ? '沒有可用的座標，無法顯示地圖。'
+      : 'Map unavailable because this store has no coordinates.';
+  String storeMap(String name) => isChinese ? '$name 地圖' : '$name map';
+  String get openNavigation => isChinese ? '開啟導航' : 'Open navigation';
+  String get unableOpenNavigation => isChinese
+      ? '無法開啟導航。'
+      : 'Unable to open navigation.';
   String get openStoreDetails =>
       isChinese ? '開啟店家詳細資料' : 'Open store details';
   String get address => isChinese ? '地址' : 'Address';

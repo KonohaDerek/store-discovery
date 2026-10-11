@@ -24,6 +24,8 @@ void main() {
     expect(response.items.single.categories, ['food.cafe']);
     expect(response.items.single.distanceMeters, 350);
     expect(response.items.single.openState, 'open');
+    expect(response.items.single.location?.latitude, 25.0478);
+    expect(response.items.single.location?.longitude, 121.5170);
   });
 
   test('parses store detail fields', () {
@@ -47,6 +49,8 @@ void main() {
     expect(detail.name, 'North Gate Coffee');
     expect(detail.businessHours, ['09:00–18:00']);
     expect(detail.openState, 'open');
+    expect(detail.location?.latitude, 25.0478);
+    expect(detail.location?.longitude, 121.5170);
     expect(detail.navigationTarget, 'https://maps.google.com/');
     expect(detail.attribution, 'Sample provider data');
   });
@@ -63,5 +67,15 @@ void main() {
     expect(detail.website, isNull);
     expect(detail.navigationTarget, isNull);
     expect(detail.attribution, isNull);
+    expect(detail.location, isNull);
+  });
+
+  test('ignores invalid store coordinates', () {
+    final detail = StoreDetail.fromJson({
+      'name': 'Invalid Location Store',
+      'location': {'lat': 91, 'lng': 181},
+    });
+
+    expect(detail.location, isNull);
   });
 }
