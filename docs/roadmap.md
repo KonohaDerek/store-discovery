@@ -24,6 +24,10 @@ GitHub Issues are the source of truth for execution. This document defines order
   baseline with English fallback, and search/detail states expose semantics.
 - #7 Store detail: mobile parsing and presentation now cover navigation target,
   attribution, and explicit unknown values for missing provider fields.
+- #20 Map presentation and navigation hand-off: mobile detail pages render a
+  Google Maps view for valid coordinates, safely fall back when coordinates are
+  unavailable, and open the provider navigation target externally. Native
+  runner API-key registration remains part of the separate runner setup.
 - #6 Discovery search/results: keyword or category input, API query, ranked
   result presentation, detail navigation, and state coverage implemented.
 - #12 CI quality gates: workflow implemented after the #16/#17 source checks;

@@ -8,6 +8,8 @@ import 'deep_links/store_deep_link.dart';
 import 'deep_links/store_link_source.dart';
 import 'l10n/app_localizations.dart';
 import 'location/location_service.dart';
+import 'map/store_map_view.dart';
+import 'navigation/navigation_service.dart';
 import 'share/store_share_service.dart';
 
 class RecentSearch {
@@ -49,6 +51,7 @@ class StoreDiscoveryApp extends StatefulWidget {
     this.locale,
     this.linkSource,
     this.shareService,
+    this.navigationService,
   });
 
   final DiscoveryApiClient? apiClient;
@@ -56,6 +59,7 @@ class StoreDiscoveryApp extends StatefulWidget {
   final Locale? locale;
   final StoreLinkSource? linkSource;
   final StoreShareService? shareService;
+  final NavigationService? navigationService;
 
   @override
   State<StoreDiscoveryApp> createState() => _StoreDiscoveryAppState();
@@ -137,6 +141,7 @@ class _StoreDiscoveryAppState extends State<StoreDiscoveryApp> {
           apiClient: apiClient,
           storeId: storeId,
           shareService: widget.shareService,
+          navigationService: widget.navigationService,
         ),
       ),
     );
@@ -162,6 +167,7 @@ class _StoreDiscoveryAppState extends State<StoreDiscoveryApp> {
         apiClient: widget.apiClient,
         locationService: widget.locationService,
         shareService: widget.shareService,
+        navigationService: widget.navigationService,
       ),
     );
   }
@@ -173,11 +179,13 @@ class DiscoveryHomePage extends StatefulWidget {
     this.apiClient,
     this.locationService,
     this.shareService,
+    this.navigationService,
   });
 
   final DiscoveryApiClient? apiClient;
   final LocationService? locationService;
   final StoreShareService? shareService;
+  final NavigationService? navigationService;
 
   @override
   State<DiscoveryHomePage> createState() => _DiscoveryHomePageState();
@@ -350,6 +358,7 @@ class _DiscoveryHomePageState extends State<DiscoveryHomePage> {
                         apiClient: widget.apiClient!,
                         storeId: store.storeId,
                         shareService: widget.shareService,
+                        navigationService: widget.navigationService,
                       ),
                     ),
                   ),
@@ -527,11 +536,13 @@ class StoreDetailPage extends StatefulWidget {
     required this.apiClient,
     required this.storeId,
     this.shareService,
+    this.navigationService,
   });
 
   final DiscoveryApiClient apiClient;
   final String storeId;
   final StoreShareService? shareService;
+  final NavigationService? navigationService;
 
   @override
   State<StoreDetailPage> createState() => _StoreDetailPageState();
@@ -560,6 +571,26 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
         SnackBar(content: Text(AppLocalizations.of(context).unableShareStore)),
       );
     }
+  }
+
+  Future<void> openNavigation(String target) async {
+    try {
+      final opened = await (widget.navigationService ??
+              PlatformNavigationService())
+          .open(target);
+      if (!mounted || opened) return;
+      showNavigationError();
+    } catch (_) {
+      if (mounted) showNavigationError();
+    }
+  }
+
+  void showNavigationError() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context).unableOpenNavigation),
+      ),
+    );
   }
 
   @override
@@ -621,6 +652,29 @@ class _StoreDetailPageState extends State<StoreDetailPage> {
               ),
               const SizedBox(height: 12),
               Text(l10n.openState(store.openState)),
+              const SizedBox(height: 12),
+              if (store.location != null)
+                StoreMapView(
+                  coordinates: store.location!,
+                  markerId: widget.storeId,
+                  markerTitle: store.name,
+                  semanticsLabel: l10n.storeMap(store.name),
+                )
+              else
+                Card(
+                  child: ListTile(
+                    leading: const Icon(Icons.map_outlined),
+                    title: Text(l10n.mapUnavailable),
+                  ),
+                ),
+              if (store.navigationTarget != null) ...[
+                const SizedBox(height: 12),
+                FilledButton.icon(
+                  onPressed: () => openNavigation(store.navigationTarget!),
+                  icon: const Icon(Icons.directions),
+                  label: Text(l10n.openNavigation),
+                ),
+              ],
               const SizedBox(height: 12),
               Semantics(
                 label: '${l10n.address}: $address',

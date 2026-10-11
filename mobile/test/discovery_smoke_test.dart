@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
 import 'package:store_discovery/location/location_service.dart';
 import 'package:store_discovery/main.dart';
+import 'package:store_discovery/navigation/navigation_service.dart';
 
 class FixtureDiscoveryClient extends DiscoveryApiClient {
   FixtureDiscoveryClient({this.failDiscovery = false})
@@ -73,6 +74,16 @@ class FixtureLocationService implements LocationService {
       const LocationPoint(latitude: 25.0478, longitude: 121.5170);
 }
 
+class FixtureNavigationService implements NavigationService {
+  String? lastTarget;
+
+  @override
+  Future<bool> open(String target) async {
+    lastTarget = target;
+    return true;
+  }
+}
+
 Future<void> searchWithManualArea(
   WidgetTester tester,
   String query,
@@ -85,8 +96,12 @@ Future<void> searchWithManualArea(
 
 void main() {
   testWidgets('completes discovery through store detail', (tester) async {
+    final navigationService = FixtureNavigationService();
     await tester.pumpWidget(
-      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+      StoreDiscoveryApp(
+        apiClient: FixtureDiscoveryClient(),
+        navigationService: navigationService,
+      ),
     );
 
     await searchWithManualArea(tester, 'cafe');
@@ -102,6 +117,14 @@ void main() {
     expect(find.text('https://example.com'), findsOneWidget);
     expect(find.text('https://maps.google.com/'), findsOneWidget);
     expect(find.text('Fixture provider data'), findsOneWidget);
+    expect(
+      find.text('Map unavailable because this store has no coordinates.'),
+      findsOneWidget,
+    );
+
+    await tester.tap(find.text('Open navigation'));
+    await tester.pump();
+    expect(navigationService.lastTarget, 'https://maps.google.com/');
   });
 
   testWidgets('shows provider failure with a retry action', (tester) async {

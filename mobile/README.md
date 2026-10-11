@@ -23,6 +23,15 @@ from an installed-app link and shows a recoverable error for invalid or
 unavailable store links. Platform runner registration is documented separately
 because this repository does not yet contain generated iOS/Android runners.
 
+Store detail pages use `google_maps_flutter` for the provider map when valid
+coordinates are available. The Google Maps SDK supplies its required map
+attribution UI. Generated iOS/Android runners must register the corresponding
+Google Maps API key before device or simulator builds; keys are not committed
+to this repository. The `navigationTarget` supplied by the API is handed off
+to the platform's external navigation app through `url_launcher`. Stores with
+missing or invalid coordinates keep the detail page usable and show a map
+fallback instead.
+
 ## Checks
 
 ```bash
