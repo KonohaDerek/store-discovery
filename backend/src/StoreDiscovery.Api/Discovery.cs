@@ -84,6 +84,17 @@ public sealed record ApiError(string Code, string Message, string CorrelationId)
 
 public sealed record ApiErrorResponse(ApiError Error);
 
+public sealed class StoreProviderException : Exception
+{
+    public StoreProviderException(string operation, Exception? innerException = null)
+        : base($"Store provider operation '{operation}' failed.", innerException)
+    {
+        Operation = operation;
+    }
+
+    public string Operation { get; }
+}
+
 public interface IStoreProvider
 {
     Task<IReadOnlyList<StoreSummary>> DiscoverAsync(

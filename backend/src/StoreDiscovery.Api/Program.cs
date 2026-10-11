@@ -57,6 +57,7 @@ app.MapGet(
         [AsParameters] DiscoveryQuery query,
         IStoreProvider provider,
         HttpContext context,
+        ILogger<Program> logger,
         CancellationToken cancellationToken) =>
     {
         var validationError = query.ValidationError();
@@ -68,8 +69,15 @@ app.MapGet(
                 CorrelationId(context))));
         }
 
-        var items = await provider.DiscoverAsync(query, cancellationToken);
-        return Results.Ok(new DiscoveryResponse(items, null));
+        try
+        {
+            var items = await provider.DiscoverAsync(query, cancellationToken);
+            return Results.Ok(new DiscoveryResponse(items, null));
+        }
+        catch (StoreProviderException exception)
+        {
+            return ProviderUnavailable(context, logger, exception);
+        }
     })
     .RequireRateLimiting("public-api");
 app.MapGet(
@@ -78,15 +86,23 @@ app.MapGet(
         string storeId,
         IStoreProvider provider,
         HttpContext context,
+        ILogger<Program> logger,
         CancellationToken cancellationToken) =>
     {
-        var detail = await provider.GetDetailAsync(storeId, cancellationToken);
-        return detail is null
-            ? Results.NotFound(new ApiErrorResponse(new ApiError(
-                "STORE_NOT_FOUND",
-                "The requested store was not found.",
-                CorrelationId(context))))
-            : Results.Ok(detail);
+        try
+        {
+            var detail = await provider.GetDetailAsync(storeId, cancellationToken);
+            return detail is null
+                ? Results.NotFound(new ApiErrorResponse(new ApiError(
+                    "STORE_NOT_FOUND",
+                    "The requested store was not found.",
+                    CorrelationId(context))))
+                : Results.Ok(detail);
+        }
+        catch (StoreProviderException exception)
+        {
+            return ProviderUnavailable(context, logger, exception);
+        }
     })
     .RequireRateLimiting("public-api");
 
@@ -94,5 +110,23 @@ app.Run();
 
 static string CorrelationId(HttpContext context) =>
     context.Response.Headers["X-Correlation-ID"].FirstOrDefault() ?? context.TraceIdentifier;
+
+static IResult ProviderUnavailable(
+    HttpContext context,
+    ILogger<Program> logger,
+    StoreProviderException exception)
+{
+    logger.LogWarning(
+        exception,
+        "Store provider request failed for operation {Operation}",
+        exception.Operation);
+
+    return Results.Json(
+        new ApiErrorResponse(new ApiError(
+            "DISCOVERY_PROVIDER_UNAVAILABLE",
+            "The store discovery provider is temporarily unavailable.",
+            CorrelationId(context))),
+        statusCode: StatusCodes.Status503ServiceUnavailable);
+}
 
 public partial class Program;
