@@ -31,8 +31,13 @@ Endpoints:
 
 The discovery endpoint currently uses a deterministic `SampleStoreProvider` so
 the mobile vertical slice can be exercised without paid or live provider calls.
-The Google Places adapter remains behind `IStoreProvider` and is the next
-provider integration step.
+Set `StoreDiscovery__Provider=google` and provide `GooglePlaces__ApiKey` to use
+the Google Places API (New) adapter. The API key is read only by the backend;
+mobile clients never receive it. The default `sample` provider remains the
+deterministic test path. Discovery uses an explicit field mask and a bounded
+`GooglePlaces__MaxResultCount` (1–20); place details are fetched only when the
+detail endpoint is requested. Google-backed detail responses include the
+provider attribution required by the mobile presentation.
 
 Discovery ranking is provider-independent: open stores rank before unknown and
 closed stores, then results sort by ascending distance, case-insensitive name,

@@ -1,4 +1,5 @@
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +10,14 @@ builder.Services
     .Bind(builder.Configuration.GetSection("StoreDiscovery"))
     .ValidateDataAnnotations()
     .ValidateOnStart();
+var selectedProvider = builder.Configuration["StoreDiscovery:Provider"] ?? "sample";
+var googlePlacesOptions = builder.Services
+    .AddOptions<GooglePlacesOptions>()
+    .Bind(builder.Configuration.GetSection("GooglePlaces"));
+if (string.Equals(selectedProvider, "google", StringComparison.OrdinalIgnoreCase))
+{
+    googlePlacesOptions.ValidateDataAnnotations().ValidateOnStart();
+}
 builder.Services.AddHealthChecks();
 builder.Services.AddRateLimiter(options =>
 {
@@ -28,7 +37,17 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0,
             }));
 });
-builder.Services.AddSingleton<IStoreProvider, SampleStoreProvider>();
+builder.Services.AddHttpClient<GooglePlacesProvider>();
+builder.Services.AddSingleton<SampleStoreProvider>();
+builder.Services.AddSingleton<IStoreProvider>(serviceProvider =>
+{
+    var options = serviceProvider
+        .GetRequiredService<IOptions<StoreDiscoveryOptions>>()
+        .Value;
+    return string.Equals(options.Provider, "google", StringComparison.OrdinalIgnoreCase)
+        ? serviceProvider.GetRequiredService<GooglePlacesProvider>()
+        : serviceProvider.GetRequiredService<SampleStoreProvider>();
+});
 
 var app = builder.Build();
 

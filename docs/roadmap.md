@@ -9,7 +9,8 @@ GitHub Issues are the source of truth for execution. This document defines order
 - #17 Backend scaffold: .NET 10 API host, live/ready health endpoints,
   configuration validation, correlation logging, and integration tests implemented.
 - Discovery vertical slice: versioned discovery endpoint, deterministic sample
-  provider, and Flutter search/results shell implemented; real provider adapter remains.
+  provider, and Flutter search/results shell implemented; Google Places API
+  (New) adapter is now available behind the provider-neutral interface.
 - #4 Location input: explicit device-location action with permission/denied
   fallback to manual area; platform permission declarations remain in mobile
   runner setup.
