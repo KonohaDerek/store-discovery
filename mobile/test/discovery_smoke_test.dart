@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
@@ -102,6 +104,7 @@ void main() {
       StoreDiscoveryApp(
         apiClient: FixtureDiscoveryClient(),
         navigationService: navigationService,
+        locale: const Locale('en'),
       ),
     );
 
@@ -132,6 +135,7 @@ void main() {
     await tester.pumpWidget(
       StoreDiscoveryApp(
         apiClient: FixtureDiscoveryClient(failDiscovery: true),
+        locale: const Locale('en'),
       ),
     );
 
@@ -146,7 +150,9 @@ void main() {
 
   testWidgets('accepts a category without a keyword', (tester) async {
     final client = FixtureDiscoveryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     await tester.enterText(find.byType(TextField).at(1), 'food.cafe');
     await tester.enterText(find.byType(TextField).last, 'Taipei');
@@ -160,7 +166,9 @@ void main() {
 
   testWidgets('repeats and clears recent manual searches', (tester) async {
     final client = FixtureDiscoveryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     await searchWithManualArea(tester, 'cafe');
 
@@ -180,7 +188,9 @@ void main() {
 
   testWidgets('keeps only the five most recent searches', (tester) async {
     final client = FixtureDiscoveryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     for (var index = 0; index < 6; index++) {
       await searchWithManualArea(tester, 'query-$index');
@@ -196,6 +206,7 @@ void main() {
       StoreDiscoveryApp(
         apiClient: FixtureDiscoveryClient(),
         locationService: FixtureLocationService(),
+        locale: const Locale('en'),
       ),
     );
 
@@ -210,7 +221,10 @@ void main() {
 
   testWidgets('adds, lists, and removes a favorite locally', (tester) async {
     await tester.pumpWidget(
-      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+      StoreDiscoveryApp(
+        apiClient: FixtureDiscoveryClient(),
+        locale: const Locale('en'),
+      ),
     );
 
     await searchWithManualArea(tester, 'cafe');
@@ -234,6 +248,7 @@ void main() {
       StoreDiscoveryApp(
         apiClient: client,
         locationService: FixtureLocationService(),
+        locale: const Locale('en'),
       ),
     );
 
@@ -252,7 +267,10 @@ void main() {
 
   testWidgets('rejects a radius without device location', (tester) async {
     await tester.pumpWidget(
-      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+      StoreDiscoveryApp(
+        apiClient: FixtureDiscoveryClient(),
+        locale: const Locale('en'),
+      ),
     );
 
     await tester.enterText(find.byType(TextField).first, 'cafe');

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
@@ -44,7 +46,9 @@ class RetryClient extends DiscoveryApiClient {
 
 void main() {
   testWidgets('renders the discovery shell', (tester) async {
-    await tester.pumpWidget(const StoreDiscoveryApp());
+    await tester.pumpWidget(
+      const StoreDiscoveryApp(locale: Locale('en')),
+    );
 
     expect(find.text('Store Discovery'), findsOneWidget);
     expect(find.text('Find a useful store nearby.'), findsOneWidget);
@@ -56,7 +60,9 @@ void main() {
 
   testWidgets('offers retry after a network failure', (tester) async {
     final client = RetryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     await tester.enterText(find.byType(TextField).first, 'cafe');
     await tester.enterText(find.byType(TextField).last, 'Taipei');

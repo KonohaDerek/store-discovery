@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/location/location_service.dart';
 import 'package:store_discovery/main.dart';
@@ -20,6 +22,7 @@ void main() {
   testWidgets('uses device location without requiring an area', (tester) async {
     await tester.pumpWidget(
       StoreDiscoveryApp(
+        locale: const Locale('en'),
         locationService: FakeLocationService(
           const LocationPoint(latitude: 25.0478, longitude: 121.5170),
         ),
@@ -37,6 +40,7 @@ void main() {
   ) async {
     await tester.pumpWidget(
       StoreDiscoveryApp(
+        locale: const Locale('en'),
         locationService: FakeLocationService(
           const LocationException(
             LocationFailure.permissionDenied,
