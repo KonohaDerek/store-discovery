@@ -99,7 +99,7 @@ Future<void> reveal(WidgetTester tester, Finder finder) async {
   await tester.scrollUntilVisible(
     finder,
     300,
-    scrollable: find.byType(Scrollable),
+    scrollable: find.byType(Scrollable).first,
   );
 }
 

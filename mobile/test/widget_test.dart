@@ -74,7 +74,7 @@ void main() {
     await tester.scrollUntilVisible(
       find.text('Retry'),
       300,
-      scrollable: find.byType(Scrollable),
+      scrollable: find.byType(Scrollable).first,
     );
     expect(find.text('Retry'), findsOneWidget);
 
