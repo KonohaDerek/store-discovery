@@ -1,0 +1,150 @@
+name: Publish delivery artifacts
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  container:
+    name: Publish backend container
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.metadata.outputs.image }}
+      digest: ${{ steps.metadata.outputs.digest }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Build container
+        run: docker build --tag store-discovery:delivery .
+      - name: Smoke test container
+        run: |
+          set -euo pipefail
+          cleanup() {
+            docker rm --force store-discovery-smoke >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          docker run --detach --name store-discovery-smoke \
+            --publish 18080:8080 \
+            --env StoreDiscovery__Provider=sample \
+            store-discovery:delivery
+          curl --fail --retry 20 --retry-delay 2 \
+            http://127.0.0.1:18080/health/live
+      - name: Log in to GHCR
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io \
+            --username "$GITHUB_ACTOR" --password-stdin
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Publish container tags
+        id: publish
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ghcr.io/konohaderek/store-discovery:sha-${{ github.sha }}
+            ghcr.io/konohaderek/store-discovery:${{ github.ref_name }}
+      - name: Export published image metadata
+        id: metadata
+        run: |
+          echo "image=ghcr.io/konohaderek/store-discovery" >> "$GITHUB_OUTPUT"
+          echo "digest=${{ steps.publish.outputs.digest }}" >> "$GITHUB_OUTPUT"
+
+  mobile:
+    name: Build internal APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.6
+          channel: stable
+          cache: true
+      - name: Generate Android runner
+        working-directory: mobile
+        run: |
+          flutter create \
+            --platforms=android \
+            --project-name=store_discovery \
+            --org=tw.konoha \
+            --no-pub .
+      - name: Get dependencies
+        working-directory: mobile
+        run: flutter pub get
+      - name: Test
+        working-directory: mobile
+        run: flutter test
+      - name: Build debug APK
+        working-directory: mobile
+        env:
+          API_BASE_URL: ${{ vars.STORE_DISCOVERY_API_BASE_URL }}
+        run: |
+          flutter build apk --debug --no-pub \
+            --dart-define=API_BASE_URL="$API_BASE_URL"
+      - name: Prepare APK checksum
+        working-directory: mobile
+        run: |
+          apk="store-discovery-${GITHUB_REF_NAME}.apk"
+          cp build/app/outputs/flutter-apk/app-debug.apk "$apk"
+          sha256sum "$apk" > "$apk.sha256"
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-discovery-apk
+          path: |
+            mobile/store-discovery-${{ github.ref_name }}.apk
+            mobile/store-discovery-${{ github.ref_name }}.apk.sha256
+
+  release:
+    name: Create GitHub Release
+    needs:
+      - container
+      - mobile
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: store-discovery-apk
+          path: release-assets
+      - name: Write delivery manifest
+        env:
+          IMAGE: ${{ needs.container.outputs.image }}
+          DIGEST: ${{ needs.container.outputs.digest }}
+        run: |
+          cat > release-assets/delivery-manifest.txt <<EOF
+          release=${GITHUB_REF_NAME}
+          commit=${GITHUB_SHA}
+          image=${IMAGE}@${DIGEST}
+          api_base_url_configured=${{ vars.STORE_DISCOVERY_API_BASE_URL != '' }}
+          apk=debug build for internal verification
+          production_signing=configured:false
+          EOF
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > release-notes.md <<EOF
+          Automated delivery for commit $GITHUB_SHA.
+
+          The manifest contains the pinned GHCR image digest and APK
+          verification notes.
+          EOF
+          gh release create "$GITHUB_REF_NAME" release-assets/* \
+            --verify-tag \
+            --title "Store Discovery $GITHUB_REF_NAME" \
+            --notes-file release-notes.md
