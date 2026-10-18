@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'api/discovery_api_client.dart';
 import 'config/app_config.dart';
@@ -153,7 +154,11 @@ class _StoreDiscoveryAppState extends State<StoreDiscoveryApp> {
       navigatorKey: navigatorKey,
       onGenerateTitle: (context) => AppLocalizations.of(context).appTitle,
       locale: widget.locale,
-      localizationsDelegates: const [AppLocalizations.delegate],
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
       supportedLocales: AppLocalizations.supportedLocales,
       localeResolutionCallback: (locale, _) =>
           locale?.languageCode == 'zh'
