@@ -193,6 +193,7 @@ void main() {
 
     await reveal(tester, find.text('Clear recent searches'));
     await tester.tap(find.text('Clear recent searches'));
+    await tester.pump();
     expect(find.text('Recent searches'), findsNothing);
   });
 

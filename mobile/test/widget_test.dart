@@ -81,6 +81,11 @@ void main() {
     client.shouldFail = false;
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('North Gate Coffee'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
 
     expect(find.text('North Gate Coffee'), findsOneWidget);
     expect(client.attempts, 2);
