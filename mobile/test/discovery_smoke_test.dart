@@ -95,6 +95,14 @@ Future<void> searchWithManualArea(
   await tester.pumpAndSettle();
 }
 
+Future<void> reveal(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    300,
+    scrollable: find.byType(Scrollable),
+  );
+}
+
 void main() {
   testWidgets('completes discovery through store detail', (tester) async {
     final navigationService = FixtureNavigationService();
@@ -107,6 +115,7 @@ void main() {
     );
 
     await searchWithManualArea(tester, 'cafe');
+    await reveal(tester, find.text('North Gate Coffee'));
 
     expect(find.text('North Gate Coffee'), findsOneWidget);
     await tester.tap(find.text('North Gate Coffee'));
@@ -159,6 +168,7 @@ void main() {
 
     expect(client.lastQuery, isEmpty);
     expect(client.lastCategory, 'food.cafe');
+    await reveal(tester, find.text('North Gate Coffee'));
     expect(find.text('North Gate Coffee'), findsOneWidget);
   });
 
@@ -169,6 +179,7 @@ void main() {
     );
 
     await searchWithManualArea(tester, 'cafe');
+    await reveal(tester, find.text('cafe · Taipei'));
 
     expect(find.text('Recent searches'), findsOneWidget);
     expect(find.text('cafe · Taipei'), findsOneWidget);
@@ -180,6 +191,7 @@ void main() {
     expect(client.lastQuery, 'cafe');
     expect(client.lastArea, 'Taipei');
 
+    await reveal(tester, find.text('Clear recent searches'));
     await tester.tap(find.text('Clear recent searches'));
     expect(find.text('Recent searches'), findsNothing);
   });
@@ -194,6 +206,7 @@ void main() {
       await searchWithManualArea(tester, 'query-$index');
     }
 
+    await reveal(tester, find.text('query-1 · Taipei'));
     expect(find.text('query-0 · Taipei'), findsNothing);
     expect(find.text('query-1 · Taipei'), findsOneWidget);
     expect(find.text('query-5 · Taipei'), findsOneWidget);
@@ -226,17 +239,19 @@ void main() {
     );
 
     await searchWithManualArea(tester, 'cafe');
+    await reveal(tester, find.byTooltip('Add to favorites'));
     await tester.tap(find.byTooltip('Add to favorites'));
     await tester.pumpAndSettle();
 
+    await reveal(tester, find.text('Favorites'));
     expect(find.text('Favorites'), findsOneWidget);
-    expect(find.text('North Gate Coffee'), findsNWidgets(2));
-    expect(find.byTooltip('Remove from favorites'), findsNWidgets(2));
+    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Remove from favorites').first);
+    await tester.tap(find.byTooltip('Remove from favorites'));
     await tester.pumpAndSettle();
 
     expect(find.text('Favorites'), findsNothing);
+    await reveal(tester, find.byTooltip('Add to favorites'));
     expect(find.byTooltip('Add to favorites'), findsOneWidget);
   });
 
