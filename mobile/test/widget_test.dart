@@ -71,6 +71,11 @@ void main() {
       find.text('No network connection. Check your connection and try again.'),
       findsOneWidget,
     );
+    await tester.scrollUntilVisible(
+      find.text('Retry'),
+      300,
+      scrollable: find.byType(Scrollable),
+    );
     expect(find.text('Retry'), findsOneWidget);
 
     client.shouldFail = false;
