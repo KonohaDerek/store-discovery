@@ -31,6 +31,7 @@ store-discovery/
 ├── backend/
 ├── tests/
 ├── openspec/
+├── Dockerfile
 ├── docker-compose.yml
 └── README.md
 ```
@@ -57,8 +58,9 @@ dotnet build backend/StoreDiscovery.sln --configuration Release
 dotnet test backend/StoreDiscovery.sln --configuration Release
 ```
 
-Platform runner generation and device builds remain a separate setup step. The
-iOS simulator, Xcode build, signing, and distribution remain macOS host
+The CI delivery workflow generates the Android runner in its ephemeral build
+workspace and publishes an internal debug APK on version tags. The iOS
+simulator, Xcode build, signing, and distribution remain macOS host
 responsibilities. Supply the backend URL explicitly when running the app:
 
 ```bash
@@ -76,6 +78,11 @@ Run the deterministic foundation gate inside the DevContainer:
 ```bash
 ./scripts/repository-check.sh
 ```
+
+The complete artifact verification path is documented in
+[docs/delivery-verification.md](docs/delivery-verification.md). A version tag
+publishes the backend image to GHCR and attaches the APK plus checksum to a
+GitHub Release.
 
 ## Initial MVP
 

@@ -1,0 +1,14 @@
+.git
+.github
+.devcontainer
+.env
+.env.*
+mobile
+docs
+openspec
+tests
+**/bin
+**/obj
+.dart_tool
+build
+coverage
