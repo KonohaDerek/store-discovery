@@ -39,6 +39,9 @@ GitHub Issues are the source of truth for execution. This document defines order
 - #23 Security and abuse controls: validated API input, normalized safe errors,
   backend-only provider secrets, native-client CORS decision, and a fixed-window
   public API rate limit with integration coverage.
+- #24/#25 Delivery verification: CI builds and validates the backend container,
+  publishes immutable GHCR tags, generates the Android runner in CI, and
+  attaches an internal debug APK with checksum to a GitHub Release.
 - #42 Advanced discovery filters: category, open-now, and location-based radius
   filters with API validation, normalized provider capability behavior, and tests.
 - #41 Share links and deep links: canonical store URI, platform share action, and

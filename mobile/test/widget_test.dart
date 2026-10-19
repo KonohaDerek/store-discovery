@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
 import 'package:store_discovery/main.dart';
@@ -43,7 +44,9 @@ class RetryClient extends DiscoveryApiClient {
 
 void main() {
   testWidgets('renders the discovery shell', (tester) async {
-    await tester.pumpWidget(const StoreDiscoveryApp());
+    await tester.pumpWidget(
+      const StoreDiscoveryApp(locale: Locale('en')),
+    );
 
     expect(find.text('Store Discovery'), findsOneWidget);
     expect(find.text('Find a useful store nearby.'), findsOneWidget);
@@ -55,7 +58,9 @@ void main() {
 
   testWidgets('offers retry after a network failure', (tester) async {
     final client = RetryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     await tester.enterText(find.byType(TextField).first, 'cafe');
     await tester.enterText(find.byType(TextField).last, 'Taipei');
@@ -66,11 +71,21 @@ void main() {
       find.text('No network connection. Check your connection and try again.'),
       findsOneWidget,
     );
+    await tester.scrollUntilVisible(
+      find.text('Retry'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.text('Retry'), findsOneWidget);
 
     client.shouldFail = false;
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
+    await tester.scrollUntilVisible(
+      find.text('North Gate Coffee'),
+      300,
+      scrollable: find.byType(Scrollable).first,
+    );
 
     expect(find.text('North Gate Coffee'), findsOneWidget);
     expect(client.attempts, 2);

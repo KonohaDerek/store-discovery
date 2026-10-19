@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
 import 'package:store_discovery/deep_links/store_deep_link.dart';
@@ -43,6 +45,7 @@ void main() {
     final shareService = RecordingShareService();
     await tester.pumpWidget(
       StoreDiscoveryApp(
+        locale: const Locale('en'),
         apiClient: FakeStoreApiClient(),
         shareService: shareService,
         linkSource: FakeStoreLinkSource(
@@ -63,6 +66,7 @@ void main() {
   testWidgets('shows an error for an invalid initial deep link', (tester) async {
     await tester.pumpWidget(
       StoreDiscoveryApp(
+        locale: const Locale('en'),
         apiClient: FakeStoreApiClient(),
         linkSource: FakeStoreLinkSource(
           Uri.parse('https://example.com/store'),

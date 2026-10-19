@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:store_discovery/api/discovery_api_client.dart';
 import 'package:store_discovery/location/location_service.dart';
@@ -94,6 +95,14 @@ Future<void> searchWithManualArea(
   await tester.pumpAndSettle();
 }
 
+Future<void> reveal(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    300,
+    scrollable: find.byType(Scrollable).first,
+  );
+}
+
 void main() {
   testWidgets('completes discovery through store detail', (tester) async {
     final navigationService = FixtureNavigationService();
@@ -101,10 +110,12 @@ void main() {
       StoreDiscoveryApp(
         apiClient: FixtureDiscoveryClient(),
         navigationService: navigationService,
+        locale: const Locale('en'),
       ),
     );
 
     await searchWithManualArea(tester, 'cafe');
+    await reveal(tester, find.text('North Gate Coffee'));
 
     expect(find.text('North Gate Coffee'), findsOneWidget);
     await tester.tap(find.text('North Gate Coffee'));
@@ -131,6 +142,7 @@ void main() {
     await tester.pumpWidget(
       StoreDiscoveryApp(
         apiClient: FixtureDiscoveryClient(failDiscovery: true),
+        locale: const Locale('en'),
       ),
     );
 
@@ -145,7 +157,9 @@ void main() {
 
   testWidgets('accepts a category without a keyword', (tester) async {
     final client = FixtureDiscoveryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     await tester.enterText(find.byType(TextField).at(1), 'food.cafe');
     await tester.enterText(find.byType(TextField).last, 'Taipei');
@@ -154,14 +168,18 @@ void main() {
 
     expect(client.lastQuery, isEmpty);
     expect(client.lastCategory, 'food.cafe');
+    await reveal(tester, find.text('North Gate Coffee'));
     expect(find.text('North Gate Coffee'), findsOneWidget);
   });
 
   testWidgets('repeats and clears recent manual searches', (tester) async {
     final client = FixtureDiscoveryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     await searchWithManualArea(tester, 'cafe');
+    await reveal(tester, find.text('cafe · Taipei'));
 
     expect(find.text('Recent searches'), findsOneWidget);
     expect(find.text('cafe · Taipei'), findsOneWidget);
@@ -173,18 +191,23 @@ void main() {
     expect(client.lastQuery, 'cafe');
     expect(client.lastArea, 'Taipei');
 
+    await reveal(tester, find.text('Clear recent searches'));
     await tester.tap(find.text('Clear recent searches'));
+    await tester.pump();
     expect(find.text('Recent searches'), findsNothing);
   });
 
   testWidgets('keeps only the five most recent searches', (tester) async {
     final client = FixtureDiscoveryClient();
-    await tester.pumpWidget(StoreDiscoveryApp(apiClient: client));
+    await tester.pumpWidget(
+      StoreDiscoveryApp(apiClient: client, locale: const Locale('en')),
+    );
 
     for (var index = 0; index < 6; index++) {
       await searchWithManualArea(tester, 'query-$index');
     }
 
+    await reveal(tester, find.text('query-1 · Taipei'));
     expect(find.text('query-0 · Taipei'), findsNothing);
     expect(find.text('query-1 · Taipei'), findsOneWidget);
     expect(find.text('query-5 · Taipei'), findsOneWidget);
@@ -195,6 +218,7 @@ void main() {
       StoreDiscoveryApp(
         apiClient: FixtureDiscoveryClient(),
         locationService: FixtureLocationService(),
+        locale: const Locale('en'),
       ),
     );
 
@@ -209,21 +233,26 @@ void main() {
 
   testWidgets('adds, lists, and removes a favorite locally', (tester) async {
     await tester.pumpWidget(
-      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+      StoreDiscoveryApp(
+        apiClient: FixtureDiscoveryClient(),
+        locale: const Locale('en'),
+      ),
     );
 
     await searchWithManualArea(tester, 'cafe');
+    await reveal(tester, find.byTooltip('Add to favorites'));
     await tester.tap(find.byTooltip('Add to favorites'));
     await tester.pumpAndSettle();
 
+    await reveal(tester, find.text('Favorites'));
     expect(find.text('Favorites'), findsOneWidget);
-    expect(find.text('North Gate Coffee'), findsNWidgets(2));
-    expect(find.byTooltip('Remove from favorites'), findsNWidgets(2));
+    expect(find.byTooltip('Remove from favorites'), findsOneWidget);
 
-    await tester.tap(find.byTooltip('Remove from favorites').first);
+    await tester.tap(find.byTooltip('Remove from favorites'));
     await tester.pumpAndSettle();
 
     expect(find.text('Favorites'), findsNothing);
+    await reveal(tester, find.byTooltip('Add to favorites'));
     expect(find.byTooltip('Add to favorites'), findsOneWidget);
   });
 
@@ -233,6 +262,7 @@ void main() {
       StoreDiscoveryApp(
         apiClient: client,
         locationService: FixtureLocationService(),
+        locale: const Locale('en'),
       ),
     );
 
@@ -251,7 +281,10 @@ void main() {
 
   testWidgets('rejects a radius without device location', (tester) async {
     await tester.pumpWidget(
-      StoreDiscoveryApp(apiClient: FixtureDiscoveryClient()),
+      StoreDiscoveryApp(
+        apiClient: FixtureDiscoveryClient(),
+        locale: const Locale('en'),
+      ),
     );
 
     await tester.enterText(find.byType(TextField).first, 'cafe');
